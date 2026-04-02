@@ -1,111 +1,85 @@
-import { useState, useCallback } from "react";
-import type { Quote } from "@/types/quote";
+import { useState, useCallback, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Quote, InsuranceType, QuoteStatus } from "@/types/quote";
 
-const STORAGE_KEY = "insurance-quotes";
-
-const loadQuotes = (): Quote[] => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : getSampleQuotes();
-  } catch {
-    return getSampleQuotes();
-  }
-};
-
-const saveQuotes = (quotes: Quote[]) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
-};
-
-function getSampleQuotes(): Quote[] {
-  return [
-    {
-      id: "1",
-      clientName: "María García López",
-      clientEmail: "maria.garcia@email.com",
-      clientPhone: "+52 55 1234 5678",
-      insuranceType: "Auto",
-      insurer: "GNP Seguros",
-      premium: 12500,
-      coverage: "Cobertura amplia con deducible 5%",
-      status: "pendiente",
-      createdAt: "2026-03-28",
-      notes: "Cliente interesada en incluir conductor menor de 25 años",
-    },
-    {
-      id: "2",
-      clientName: "Carlos Rodríguez",
-      clientEmail: "carlos.r@email.com",
-      clientPhone: "+52 33 9876 5432",
-      insuranceType: "Vida",
-      insurer: "MetLife",
-      premium: 8900,
-      coverage: "Suma asegurada $2,000,000 MXN",
-      status: "aprobada",
-      createdAt: "2026-03-25",
-      notes: "",
-    },
-    {
-      id: "3",
-      clientName: "Ana Martínez Soto",
-      clientEmail: "ana.mtz@email.com",
-      clientPhone: "+52 81 5555 1234",
-      insuranceType: "Hogar",
-      insurer: "AXA Seguros",
-      premium: 6750,
-      coverage: "Contenidos + Estructura + RC",
-      status: "rechazada",
-      createdAt: "2026-03-20",
-      notes: "El cliente prefirió otra aseguradora",
-    },
-    {
-      id: "4",
-      clientName: "Roberto Hernández",
-      clientEmail: "roberto.h@email.com",
-      clientPhone: "+52 55 4321 8765",
-      insuranceType: "Salud",
-      insurer: "Seguros Monterrey",
-      premium: 15200,
-      coverage: "Plan familiar, tabulador alto",
-      status: "pendiente",
-      createdAt: "2026-04-01",
-      notes: "Espera comparar con otra cotización",
-    },
-  ];
+interface DbRow {
+  id: string;
+  client_name: string;
+  client_email: string;
+  client_phone: string;
+  insurance_type: string;
+  insurer: string;
+  premium: number;
+  coverage: string;
+  status: string;
+  notes: string;
+  created_at: string;
 }
 
+const toQuote = (row: DbRow): Quote => ({
+  id: row.id,
+  clientName: row.client_name,
+  clientEmail: row.client_email,
+  clientPhone: row.client_phone,
+  insuranceType: row.insurance_type as InsuranceType,
+  insurer: row.insurer,
+  premium: Number(row.premium),
+  coverage: row.coverage,
+  status: row.status as QuoteStatus,
+  createdAt: row.created_at,
+  notes: row.notes,
+});
+
 export function useQuotes() {
-  const [quotes, setQuotes] = useState<Quote[]>(loadQuotes);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const addQuote = useCallback((quote: Omit<Quote, "id" | "createdAt">) => {
-    setQuotes((prev) => {
-      const newQuotes = [
-        {
-          ...quote,
-          id: crypto.randomUUID(),
-          createdAt: new Date().toISOString().split("T")[0],
-        },
-        ...prev,
-      ];
-      saveQuotes(newQuotes);
-      return newQuotes;
-    });
+  const fetchQuotes = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("cotizaciones")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setQuotes((data as unknown as DbRow[]).map(toQuote));
+    setLoading(false);
   }, []);
 
-  const updateQuote = useCallback((id: string, updates: Partial<Quote>) => {
-    setQuotes((prev) => {
-      const newQuotes = prev.map((q) => (q.id === id ? { ...q, ...updates } : q));
-      saveQuotes(newQuotes);
-      return newQuotes;
-    });
-  }, []);
+  useEffect(() => { fetchQuotes(); }, [fetchQuotes]);
 
-  const deleteQuote = useCallback((id: string) => {
-    setQuotes((prev) => {
-      const newQuotes = prev.filter((q) => q.id !== id);
-      saveQuotes(newQuotes);
-      return newQuotes;
+  const addQuote = useCallback(async (quote: Omit<Quote, "id" | "createdAt">) => {
+    const { error } = await supabase.from("cotizaciones").insert({
+      client_name: quote.clientName,
+      client_email: quote.clientEmail,
+      client_phone: quote.clientPhone,
+      insurance_type: quote.insuranceType,
+      insurer: quote.insurer,
+      premium: quote.premium,
+      coverage: quote.coverage,
+      status: quote.status,
+      notes: quote.notes,
     });
-  }, []);
+    if (!error) await fetchQuotes();
+  }, [fetchQuotes]);
 
-  return { quotes, addQuote, updateQuote, deleteQuote };
+  const updateQuote = useCallback(async (id: string, updates: Partial<Quote>) => {
+    const mapped: Record<string, unknown> = {};
+    if (updates.clientName !== undefined) mapped.client_name = updates.clientName;
+    if (updates.clientEmail !== undefined) mapped.client_email = updates.clientEmail;
+    if (updates.clientPhone !== undefined) mapped.client_phone = updates.clientPhone;
+    if (updates.insuranceType !== undefined) mapped.insurance_type = updates.insuranceType;
+    if (updates.insurer !== undefined) mapped.insurer = updates.insurer;
+    if (updates.premium !== undefined) mapped.premium = updates.premium;
+    if (updates.coverage !== undefined) mapped.coverage = updates.coverage;
+    if (updates.status !== undefined) mapped.status = updates.status;
+    if (updates.notes !== undefined) mapped.notes = updates.notes;
+
+    const { error } = await supabase.from("cotizaciones").update(mapped).eq("id", id);
+    if (!error) await fetchQuotes();
+  }, [fetchQuotes]);
+
+  const deleteQuote = useCallback(async (id: string) => {
+    const { error } = await supabase.from("cotizaciones").delete().eq("id", id);
+    if (!error) await fetchQuotes();
+  }, [fetchQuotes]);
+
+  return { quotes, loading, addQuote, updateQuote, deleteQuote };
 }
