@@ -14,7 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cotizaciones: {
+        Row: {
+          client_email: string
+          client_name: string
+          client_phone: string
+          coverage: string
+          created_at: string
+          id: string
+          insurance_type: string
+          insurer: string
+          notes: string
+          premium: number
+          status: string
+        }
+        Insert: {
+          client_email?: string
+          client_name: string
+          client_phone?: string
+          coverage?: string
+          created_at?: string
+          id?: string
+          insurance_type: string
+          insurer: string
+          notes?: string
+          premium?: number
+          status?: string
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          client_phone?: string
+          coverage?: string
+          created_at?: string
+          id?: string
+          insurance_type?: string
+          insurer?: string
+          notes?: string
+          premium?: number
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
