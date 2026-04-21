@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      cotizaciones_diarias: {
+        Row: {
+          id:            string
+          fecha:         string
+          id_cotizacion: number | null
+          codigo:        string | null
+          pdf_url:       string | null
+          pdf_filename:  string | null
+          total_planes:  number
+          aseguradoras:  Json
+          status:        string
+          error_message: string | null
+          ejecutado_en:  string
+        }
+        Insert: {
+          id?:            string
+          fecha?:         string
+          id_cotizacion?: number | null
+          codigo?:        string | null
+          pdf_url?:       string | null
+          pdf_filename?:  string | null
+          total_planes?:  number
+          aseguradoras?:  Json
+          status?:        string
+          error_message?: string | null
+          ejecutado_en?:  string
+        }
+        Update: {
+          id?:            string
+          fecha?:         string
+          id_cotizacion?: number | null
+          codigo?:        string | null
+          pdf_url?:       string | null
+          pdf_filename?:  string | null
+          total_planes?:  number
+          aseguradoras?:  Json
+          status?:        string
+          error_message?: string | null
+          ejecutado_en?:  string
+        }
+        Relationships: []
+      }
       cotizaciones: {
         Row: {
           client_email: string

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, ShieldCheck, BookOpen } from "lucide-react";
+import { Plus, Search, ShieldCheck, BookOpen, TrendingUp } from "lucide-react";
 import { useQuotes } from "@/hooks/useQuotes";
 import { QuotesTable } from "@/components/QuotesTable";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
@@ -62,7 +62,13 @@ const Index = () => {
           <span className="text-sm text-muted-foreground hidden sm:inline">
             Gestión de cotizaciones de seguros
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/precios-diarios">
+                <TrendingUp className="h-4 w-4 mr-1.5" />
+                Precios del Día
+              </Link>
+            </Button>
             <Button variant="outline" size="sm" asChild>
               <Link to="/base-conocimiento">
                 <BookOpen className="h-4 w-4 mr-1.5" />
