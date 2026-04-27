@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 export interface CotizacionDiaria {
   id: string;
   fecha: string;
-  categoria: "basico" | "intermedio" | "premium" | "todos";
+  categoria: string;
+  rango_edad: string;
   id_cotizacion: number | null;
   codigo: string | null;
   pdf_url: string | null;
@@ -16,12 +17,39 @@ export interface CotizacionDiaria {
   ejecutado_en: string;
 }
 
+export type CategoriaKey =
+  | "asistencia_aps"
+  | "emergencias_medicas"
+  | "salud_basica_a"
+  | "salud_basica_b"
+  | "salud_estandar"
+  | "salud_media"
+  | "salud_alta"
+  | "salud_premium";
+
+export const CATEGORIAS_ORDER: CategoriaKey[] = [
+  "asistencia_aps",
+  "emergencias_medicas",
+  "salud_basica_a",
+  "salud_basica_b",
+  "salud_estandar",
+  "salud_media",
+  "salud_alta",
+  "salud_premium",
+];
+
+export const RANGOS_ORDER = [
+  "0-9", "10-29", "30-39", "40-49", "50-54",
+  "55-59", "60-64", "65-69", "70-74", "75+",
+];
+
+// DiaResumen: por cada subcategoría, un mapa de rango_edad → cotización
 export interface DiaResumen {
   fecha: string;
-  basico:     CotizacionDiaria | null;
-  intermedio: CotizacionDiaria | null;
-  premium:    CotizacionDiaria | null;
+  categorias: Record<CategoriaKey, Record<string, CotizacionDiaria>>;
 }
+
+export type Subcategoria = CategoriaKey;
 
 export interface PlanCatalog {
   id: string;
@@ -32,6 +60,7 @@ export interface PlanCatalog {
   nombre_plan: string;
   suma_asegurada: number;
   tipo: number;
+  subcategoria: Subcategoria;
   ejecutado_en: string;
 }
 
@@ -52,23 +81,26 @@ export function usePreciosDiarios(filters: Filters = {}) {
       .from("cotizaciones_diarias")
       .select("*")
       .order("fecha", { ascending: false })
-      .order("ejecutado_en", { ascending: false });
+      .order("categoria")
+      .order("rango_edad");
 
     if (filters.fechaDesde) query = query.gte("fecha", filters.fechaDesde);
     if (filters.fechaHasta) query = query.lte("fecha", filters.fechaHasta);
 
     const { data, error } = await query;
     if (!error && data) {
-      // Group by fecha
       const map = new Map<string, DiaResumen>();
       for (const row of data as CotizacionDiaria[]) {
         if (!map.has(row.fecha)) {
-          map.set(row.fecha, { fecha: row.fecha, basico: null, intermedio: null, premium: null });
+          map.set(row.fecha, {
+            fecha: row.fecha,
+            categorias: {} as Record<CategoriaKey, Record<string, CotizacionDiaria>>,
+          });
         }
         const dia = map.get(row.fecha)!;
-        if (row.categoria === "basico")     dia.basico     = row;
-        if (row.categoria === "intermedio") dia.intermedio = row;
-        if (row.categoria === "premium")    dia.premium    = row;
+        const cat = row.categoria as CategoriaKey;
+        if (!dia.categorias[cat]) dia.categorias[cat] = {};
+        dia.categorias[cat][row.rango_edad] = row;
       }
       setDias(Array.from(map.values()));
     }
@@ -77,23 +109,27 @@ export function usePreciosDiarios(filters: Filters = {}) {
 
   useEffect(() => { fetchRegistros(); }, [fetchRegistros]);
 
-  const triggerSync = useCallback(async () => {
+  const ANON_KEY = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oc3pxcXFxbGN3bWNzam1ncm12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0MjYsImV4cCI6MjA5MDc0MjQyNn0.uwi4m7-HC4AuSqm0GkCn_ixNY5VIK6-mETY0I6RwsXA`;
+
+  const callEdgeFn = useCallback(async (fn: string) => {
     const res = await fetch(
-      "https://nhszqqqqlcwmcsjmgrmv.supabase.co/functions/v1/daily-price-sync",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oc3pxcXFxbGN3bWNzam1ncm12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxNjY0MjYsImV4cCI6MjA5MDc0MjQyNn0.uwi4m7-HC4AuSqm0GkCn_ixNY5VIK6-mETY0I6RwsXA`,
-        },
-      }
+      `https://nhszqqqqlcwmcsjmgrmv.supabase.co/functions/v1/${fn}`,
+      { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${ANON_KEY}` } }
     );
-    const result = await res.json();
+    return res.json();
+  }, []);
+
+  const triggerSync = useCallback(async () => {
+    const result = await callEdgeFn("daily-price-sync");
     await fetchRegistros();
     return result;
-  }, [fetchRegistros]);
+  }, [callEdgeFn, fetchRegistros]);
 
-  return { dias, loading, refetch: fetchRegistros, triggerSync };
+  const triggerExtractPrices = useCallback(async () => {
+    return callEdgeFn("extract-prices");
+  }, [callEdgeFn]);
+
+  return { dias, loading, refetch: fetchRegistros, triggerSync, triggerExtractPrices };
 }
 
 export function usePlanCatalog(filters: { fecha?: string; id_aseguradora?: number; tipo?: number } = {}) {
@@ -102,7 +138,6 @@ export function usePlanCatalog(filters: { fecha?: string; id_aseguradora?: numbe
 
   const fetchPlanes = useCallback(async () => {
     setLoading(true);
-    // Default to today's catalog, fall back to latest available date
     let fechaTarget = filters.fecha;
     if (!fechaTarget) {
       const { data: latest } = await db
@@ -113,7 +148,6 @@ export function usePlanCatalog(filters: { fecha?: string; id_aseguradora?: numbe
         .maybeSingle();
       fechaTarget = latest?.fecha;
     }
-
     if (!fechaTarget) { setLoading(false); return; }
 
     let query = db
