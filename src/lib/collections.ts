@@ -21,5 +21,6 @@ export const POLICY_TYPES = [
   { value: "empresarial", label: "Empresarial / Pymes" },
   { value: "mascotas", label: "Mascotas" },
   { value: "ciberseguridad", label: "Ciberseguridad" },
+  { value: "fianza", label: "Fianza" },
   { value: "general", label: "General / Condicionados" },
 ];
