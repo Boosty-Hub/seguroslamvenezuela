@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { ShieldCheck, LayoutDashboard, TrendingUp, BookOpen } from "lucide-react";
+import { LayoutDashboard, TrendingUp, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -13,14 +13,12 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-60 shrink-0 bg-slate-900 min-h-screen border-r border-white/5">
 
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 h-16 border-b border-white/5 shrink-0">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary shrink-0">
-          <ShieldCheck className="h-4 w-4 text-white" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-white leading-tight">CotiSeguro</p>
-          <p className="text-[10px] text-white/35 leading-tight tracking-wide">Seguros LAM</p>
-        </div>
+      <div className="flex items-center px-5 h-16 border-b border-white/5 shrink-0">
+        <img
+          src="/logolam.png"
+          alt="LAM Corredores de Seguros"
+          className="h-10 w-auto object-contain"
+        />
       </div>
 
       {/* Navigation */}
@@ -55,7 +53,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-white/5 shrink-0">
         <p className="text-[10px] text-white/20 text-center tracking-wide">
-          Seguros LAM IT · v1.0
+          LAM Corredores de Seguros · v1.0
         </p>
       </div>
     </aside>
