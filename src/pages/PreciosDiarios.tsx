@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ShieldCheck, FileText, RefreshCw, CalendarDays,
+  FileText, RefreshCw, CalendarDays,
   CheckCircle2, XCircle, Clock, ExternalLink,
-  BookOpen, LayoutDashboard, TrendingUp, List, ChevronDown, ChevronUp,
+  TrendingUp, List, ChevronDown, ChevronUp,
 } from "lucide-react";
 import {
   usePreciosDiarios, usePlanCatalog,
@@ -147,90 +147,91 @@ export default function PreciosDiarios() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container flex items-center gap-3 py-4">
-          <div className="flex items-center gap-2 text-primary">
-            <ShieldCheck className="h-7 w-7" />
-            <h1 className="text-xl font-bold tracking-tight">CotiSeguro</h1>
-          </div>
-          <span className="text-sm text-muted-foreground hidden sm:inline">Precios diarios</span>
-          <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/"><LayoutDashboard className="h-4 w-4 mr-1.5" />Cotizaciones</Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/base-conocimiento"><BookOpen className="h-4 w-4 mr-1.5" />Base de Conocimiento</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b bg-card px-6 h-14 flex items-center">
+        <h1 className="text-base font-semibold">Precios del Día</h1>
+        <span className="ml-3 text-sm text-muted-foreground hidden sm:inline">Cotizaciones diarias del mercado</span>
+      </div>
 
       <main className="container py-6 space-y-6">
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4" /> Días registrados
+          <Card className="border-l-[3px] border-l-blue-400">
+            <CardHeader className="pb-1 pt-4 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-blue-100 flex items-center justify-center shrink-0">
+                  <CalendarDays className="h-3.5 w-3.5 text-blue-600" />
+                </div>
+                Días registrados
               </CardTitle>
             </CardHeader>
-            <CardContent><p className="text-2xl font-bold">{totalDias}</p></CardContent>
+            <CardContent className="px-4 pb-4"><p className="text-3xl font-bold">{totalDias}</p></CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <FileText className="h-4 w-4 text-green-500" /> PDFs hoy
+          <Card className="border-l-[3px] border-l-green-400">
+            <CardHeader className="pb-1 pt-4 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-green-100 flex items-center justify-center shrink-0">
+                  <FileText className="h-3.5 w-3.5 text-green-600" />
+                </div>
+                PDFs hoy
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-bold text-green-600">{totalPdfs}<span className="text-sm font-normal text-muted-foreground">/80</span></p>
+            <CardContent className="px-4 pb-4">
+              <p className="text-3xl font-bold text-green-600">{totalPdfs}<span className="text-base font-normal text-muted-foreground">/80</span></p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <TrendingUp className="h-4 w-4" /> Subcategorías
+          <Card className="border-l-[3px] border-l-violet-400">
+            <CardHeader className="pb-1 pt-4 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-violet-100 flex items-center justify-center shrink-0">
+                  <TrendingUp className="h-3.5 w-3.5 text-violet-600" />
+                </div>
+                Subcategorías
               </CardTitle>
             </CardHeader>
-            <CardContent><p className="text-2xl font-bold">8</p></CardContent>
+            <CardContent className="px-4 pb-4"><p className="text-3xl font-bold">8</p></CardContent>
           </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <CheckCircle2 className="h-4 w-4 text-blue-500" /> Rangos de edad
+          <Card className="border-l-[3px] border-l-amber-400">
+            <CardHeader className="pb-1 pt-4 px-4">
+              <CardTitle className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                <div className="h-6 w-6 rounded-md bg-amber-100 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-amber-600" />
+                </div>
+                Rangos de edad
               </CardTitle>
             </CardHeader>
-            <CardContent><p className="text-2xl font-bold">10</p></CardContent>
+            <CardContent className="px-4 pb-4"><p className="text-3xl font-bold">10</p></CardContent>
           </Card>
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end justify-between">
-          <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div className="rounded-lg border bg-card/60 px-3 py-2 flex flex-wrap gap-3 items-end">
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Desde</label>
-              <Input type="date" className="w-40" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+              <label className="text-xs font-medium text-muted-foreground">Desde</label>
+              <Input type="date" className="w-38 h-8 text-sm" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Hasta</label>
-              <Input type="date" className="w-40" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+              <label className="text-xs font-medium text-muted-foreground">Hasta</label>
+              <Input type="date" className="w-38 h-8 text-sm" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
             </div>
             {(fechaDesde || fechaHasta) && (
-              <Button variant="ghost" size="sm" onClick={() => { setFechaDesde(""); setFechaHasta(""); }}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setFechaDesde(""); setFechaHasta(""); }}>
                 Limpiar
               </Button>
             )}
           </div>
-          <Button onClick={handleSync} disabled={syncing}>
-            <RefreshCw className={`h-4 w-4 mr-1.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? (syncStatus || "Sincronizando...") : "Sincronizar ahora"}
-          </Button>
-          <Button variant="secondary" onClick={handleExtract} disabled={extracting}>
-            <RefreshCw className={`h-4 w-4 mr-1.5 ${extracting ? "animate-spin" : ""}`} />
-            {extracting ? "Extrayendo..." : "Extraer precios"}
-          </Button>
+          <div className="flex gap-2 shrink-0">
+            <Button variant="outline" onClick={handleExtract} disabled={extracting} size="sm">
+              <FileText className={`h-4 w-4 mr-1.5 ${extracting ? "animate-pulse" : ""}`} />
+              {extracting ? "Extrayendo..." : "Extraer precios"}
+            </Button>
+            <Button onClick={handleSync} disabled={syncing}>
+              <RefreshCw className={`h-4 w-4 mr-1.5 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? (syncStatus || "Sincronizando...") : "Sincronizar ahora"}
+            </Button>
+          </div>
         </div>
 
         <Tabs defaultValue="cotizaciones">
@@ -357,16 +358,25 @@ function DiaCard({ dia }: { dia: DiaResumen }) {
   const totalOk = Object.values(dia.categorias).reduce((acc, rangos) =>
     acc + Object.values(rangos).filter(c => c.status === "success").length, 0
   );
+  const pct = Math.round((totalOk / 80) * 100);
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <CalendarDays className="h-4 w-4 text-muted-foreground" />
-        <span className="font-semibold">{dia.fecha}</span>
-        <Badge className={`text-xs ${totalOk === 80 ? "bg-green-100 text-green-700" : totalOk > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
-          {totalOk}/80 PDFs
-        </Badge>
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+      <div className="px-4 py-3 flex items-center justify-between gap-3 border-b bg-muted/30">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold text-sm">{dia.fecha}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 min-w-[120px]">
+            <Progress value={pct} className="h-1.5 flex-1" />
+            <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+          </div>
+          <Badge className={`text-xs ${totalOk === 80 ? "bg-green-100 text-green-700" : totalOk > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+            {totalOk}/80 PDFs
+          </Badge>
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
         {CATEGORIAS_ORDER.map(cat => (
           <SubcategoriaCard key={cat} cat={cat} rangos={dia.categorias[cat] ?? {}} />
         ))}
@@ -378,36 +388,39 @@ function DiaCard({ dia }: { dia: DiaResumen }) {
 function SubcategoriaCard({ cat, rangos }: { cat: CategoriaKey; rangos: Record<string, CotizacionDiaria> }) {
   const [open, setOpen] = useState(false);
   const meta = CATEGORIA_META[cat];
-  const total   = RANGOS_ORDER.length;
+  const total    = RANGOS_ORDER.length;
   const exitosos = RANGOS_ORDER.filter(r => rangos[r]?.status === "success").length;
+  const pct = Math.round((exitosos / total) * 100);
 
   return (
-    <div className={`rounded-md border p-3 space-y-2 ${meta.color}`}>
+    <div className={`rounded-lg border p-3 space-y-2 ${meta.color}`}>
       <button
         type="button"
         className="w-full flex items-center justify-between gap-2"
         onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-base">{meta.icon}</span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-lg leading-none">{meta.icon}</span>
           <div className="text-left">
-            <p className="text-sm font-semibold">{meta.label}</p>
-            <p className="text-xs text-muted-foreground">{meta.desc}</p>
+            <p className="text-sm font-semibold leading-tight">{meta.label}</p>
+            <p className="text-xs text-muted-foreground leading-tight mt-0.5">{meta.desc}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <Badge className={`${meta.badgeColor} text-xs`}>{exitosos}/{total}</Badge>
-          {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+          <Badge className={`${meta.badgeColor} text-xs tabular-nums`}>{exitosos}/{total}</Badge>
+          {open ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
         </div>
       </button>
 
+      <Progress value={pct} className="h-1 opacity-70" />
+
       {open && (
-        <div className="pt-2 border-t space-y-1">
+        <div className="pt-2 border-t space-y-0.5">
           {RANGOS_ORDER.map(rango => {
             const cot = rangos[rango];
             return (
-              <div key={rango} className="flex items-center justify-between py-1 px-2 rounded bg-background/60">
-                <span className="text-xs font-medium w-16">{rango} años</span>
+              <div key={rango} className="flex items-center justify-between py-1.5 px-2 rounded-md bg-background/70 hover:bg-background/90 transition-colors">
+                <span className="text-xs font-medium text-muted-foreground w-16">{rango} años</span>
                 {cot?.status === "success" && cot.pdf_url ? (
                   <a href={cot.pdf_url} target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-primary hover:underline text-xs font-medium">

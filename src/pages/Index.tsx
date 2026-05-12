@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, ShieldCheck, BookOpen, TrendingUp } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useQuotes } from "@/hooks/useQuotes";
 import { QuotesTable } from "@/components/QuotesTable";
 import { QuoteFormDialog } from "@/components/QuoteFormDialog";
@@ -51,33 +50,11 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container flex items-center gap-3 py-4">
-          <div className="flex items-center gap-2 text-primary">
-            <ShieldCheck className="h-7 w-7" />
-            <h1 className="text-xl font-bold tracking-tight">CotiSeguro</h1>
-          </div>
-          <span className="text-sm text-muted-foreground hidden sm:inline">
-            Gestión de cotizaciones de seguros
-          </span>
-          <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/precios-diarios">
-                <TrendingUp className="h-4 w-4 mr-1.5" />
-                Precios del Día
-              </Link>
-            </Button>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/base-conocimiento">
-                <BookOpen className="h-4 w-4 mr-1.5" />
-                Base de Conocimiento
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b bg-card px-6 h-14 flex items-center">
+        <h1 className="text-base font-semibold">Cotizaciones</h1>
+        <span className="ml-3 text-sm text-muted-foreground hidden sm:inline">Gestión de cotizaciones de seguros</span>
+      </div>
 
       <main className="container py-6 space-y-6">
         <StatsCards quotes={quotes} />
@@ -118,6 +95,7 @@ const Index = () => {
       />
     </div>
   );
+
 };
 
 export default Index;

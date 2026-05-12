@@ -74,11 +74,15 @@ export function CollectionSelector({
 
       {/* Summary */}
       {collection && policyType && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2.5 bg-primary/5 border border-primary/20">
           <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />
-          Archivos etiquetados como:
-          <span className="font-medium text-foreground">
-            {COLLECTIONS.find((c) => c.value === collection)?.label} · {POLICY_TYPES.find((p) => p.value === policyType)?.label}
+          <span className="text-muted-foreground">Archivos etiquetados como:</span>
+          <span className="font-semibold text-foreground">
+            {COLLECTIONS.find((c) => c.value === collection)?.label}
+          </span>
+          <span className="text-muted-foreground">·</span>
+          <span className="font-semibold text-foreground">
+            {POLICY_TYPES.find((p) => p.value === policyType)?.label}
           </span>
         </div>
       )}

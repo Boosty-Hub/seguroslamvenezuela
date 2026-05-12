@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Trash2, FileText, RefreshCw, Filter, Pencil, Check, X } from "lucide-react";
+import { Trash2, FileText, RefreshCw, Filter, Pencil, Check, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getKnowledgeFiles, deleteKnowledgeFile, updateKnowledgeFile, type KnowledgeFile } from "@/lib/supabaseVector";
+import { getKnowledgeFiles, deleteKnowledgeFile, updateKnowledgeFile, getKnowledgeFileDownloadUrl, type KnowledgeFile } from "@/lib/supabaseVector";
 import { COLLECTIONS, POLICY_TYPES } from "@/lib/collections";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,6 +15,7 @@ export function DocumentsList({ refreshTrigger }: Props) {
   const [files, setFiles] = useState<KnowledgeFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editCollection, setEditCollection] = useState("");
   const [editPolicyType, setEditPolicyType] = useState("");
@@ -38,8 +39,9 @@ export function DocumentsList({ refreshTrigger }: Props) {
 
   const handleDelete = async (file: KnowledgeFile) => {
     setDeleting(file.id);
+    setConfirmDelete(null);
     try {
-      await deleteKnowledgeFile(file.id, file.collection);
+      await deleteKnowledgeFile(file.id, file.collection, file.storage_path);
       setFiles((prev) => prev.filter((f) => f.id !== file.id));
       toast({ title: "Documento eliminado" });
     } catch (e: unknown) {
@@ -47,6 +49,18 @@ export function DocumentsList({ refreshTrigger }: Props) {
     } finally {
       setDeleting(null);
     }
+  };
+
+  const handleDownload = (file: KnowledgeFile) => {
+    if (!file.storage_path) return;
+    const url = getKnowledgeFileDownloadUrl(file.storage_path);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.target = "_blank";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const startEdit = (file: KnowledgeFile) => {
@@ -103,8 +117,8 @@ export function DocumentsList({ refreshTrigger }: Props) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+      <div className="rounded-lg border bg-card px-3 py-2.5 flex flex-wrap items-center gap-2">
+        <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
         <Select value={filterCollection} onValueChange={setFilterCollection}>
           <SelectTrigger className="w-48 h-8 text-xs">
             <SelectValue placeholder="Todas las aseguradoras" />
@@ -138,22 +152,35 @@ export function DocumentsList({ refreshTrigger }: Props) {
           </Button>
         )}
         <span className="text-xs text-muted-foreground ml-auto">
-          {filtered.length} de {files.length} documentos
+          {filtered.length} de {files.length} documento{files.length !== 1 ? "s" : ""}
         </span>
       </div>
 
       {/* List */}
       {!filtered.length ? (
-        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
-          <FileText className="h-8 w-8" />
-          <p>{files.length ? "Sin resultados para los filtros seleccionados" : "No hay documentos cargados aun"}</p>
+        <div className="rounded-lg border bg-card/50 flex flex-col items-center justify-center py-14 text-muted-foreground gap-3">
+          <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+            <FileText className="h-6 w-6" />
+          </div>
+          <p className="text-sm">{files.length ? "Sin resultados para los filtros seleccionados" : "No hay documentos cargados aún"}</p>
+          {!files.length && <p className="text-xs">Sube archivos en la pestaña «Cargar archivos»</p>}
         </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((file) => (
-            <div key={file.id} className="rounded-lg border bg-card p-3 space-y-2">
+            <div
+              key={file.id}
+              className={`rounded-lg border bg-card p-3 space-y-2 border-l-[3px] transition-colors ${
+                file.status === "completed"  ? "border-l-green-400" :
+                file.status === "error"      ? "border-l-red-400"   :
+                file.status === "processing" ? "border-l-blue-400"  :
+                "border-l-amber-400"
+              }`}
+            >
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center shrink-0">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.name}</p>
                   {editing !== file.id && (
@@ -168,27 +195,69 @@ export function DocumentsList({ refreshTrigger }: Props) {
                   )}
                 </div>
                 <StatusBadge status={file.status} errorMessage={file.error_message} />
-                {editing !== file.id && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0"
-                    disabled={!!deleting}
-                    onClick={() => startEdit(file)}
-                    title="Editar aseguradora / tipo"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
+
+                {editing !== file.id && confirmDelete !== file.id && (
+                  <>
+                    {/* Download original file */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
+                      title={file.storage_path ? "Descargar archivo original" : "Archivo original no disponible (subido antes de esta versión)"}
+                      disabled={!file.storage_path || !!deleting}
+                      onClick={() => handleDownload(file)}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+
+                    {/* Edit metadata */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary shrink-0"
+                      disabled={!!deleting}
+                      onClick={() => { startEdit(file); setConfirmDelete(null); }}
+                      title="Editar aseguradora / tipo"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+
+                    {/* Delete — requires confirm */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                      disabled={deleting === file.id}
+                      onClick={() => setConfirmDelete(file.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
-                  disabled={deleting === file.id || editing === file.id}
-                  onClick={() => handleDelete(file)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+
+                {/* Inline delete confirmation */}
+                {confirmDelete === file.id && (
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="text-xs text-destructive font-medium hidden sm:inline">¿Eliminar?</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs"
+                      disabled={deleting === file.id}
+                      onClick={() => handleDelete(file)}
+                    >
+                      {deleting === file.id ? <RefreshCw className="h-3 w-3 animate-spin" /> : "Sí"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2.5 text-xs"
+                      onClick={() => setConfirmDelete(null)}
+                    >
+                      No
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {editing === file.id && (

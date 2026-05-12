@@ -11,6 +11,7 @@ export interface KnowledgeFile {
   status: "pending" | "processing" | "completed" | "error";
   error_message?: string;
   created_at: string;
+  storage_path?: string;
 }
 
 // In dev, use Vite proxy to avoid CORS. In production (Lovable), call Supabase directly.
@@ -148,6 +149,21 @@ export async function processDocument(
   if (insertError) throw new Error(insertError.message);
   const fileId = row.id;
 
+  // Upload original file to Storage so it can be downloaded later
+  const storagePath = `${collection}/${fileId}/${file.name}`;
+  try {
+    const { error: storageError } = await supabase.storage
+      .from("knowledge-files")
+      .upload(storagePath, file, { upsert: true, contentType: file.type || "application/octet-stream" });
+    if (storageError) {
+      console.warn("[processDocument] Storage upload failed:", storageError.message);
+    } else {
+      await supabase.from("knowledge_files").update({ storage_path: storagePath }).eq("id", fileId);
+    }
+  } catch (e) {
+    console.warn("[processDocument] Storage upload error:", e);
+  }
+
   const formData = new FormData();
   formData.append("collection", collection);
   formData.append("policy_type", policyType);
@@ -228,6 +244,25 @@ export async function processDocument(
   return { chunks: result.chunks as number };
 }
 
+// ── Chunk preview ────────────────────────────────────────────────────────────
+
+export interface DocumentChunk {
+  id: string;
+  content: string;
+  metadata: Record<string, unknown>;
+}
+
+export async function getDocumentChunks(fileId: string): Promise<DocumentChunk[]> {
+  const { data, error } = await supabase
+    .from("documents")
+    .select("id, content, metadata")
+    .contains("metadata", { file_id: fileId })
+    .order("id")
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as DocumentChunk[];
+}
+
 // ── Read / delete helpers ─────────────────────────────────────────────────────
 
 export async function getKnowledgeFiles(): Promise<KnowledgeFile[]> {
@@ -280,14 +315,24 @@ export async function updateKnowledgeFile(
   }
 }
 
-export async function deleteKnowledgeFile(id: string, collection: string): Promise<void> {
+export async function deleteKnowledgeFile(id: string, collection: string, storagePath?: string): Promise<void> {
+  // Remove chunks from vector store
   const { error: docError } = await supabase
     .from("documents")
     .delete()
     .contains("metadata", { file_id: id, collection });
-
   if (docError) throw new Error(docError.message);
+
+  // Remove original file from Storage if it was saved
+  if (storagePath) {
+    await supabase.storage.from("knowledge-files").remove([storagePath]);
+  }
 
   const { error } = await supabase.from("knowledge_files").delete().eq("id", id);
   if (error) throw new Error(error.message);
+}
+
+export function getKnowledgeFileDownloadUrl(storagePath: string): string {
+  const { data } = supabase.storage.from("knowledge-files").getPublicUrl(storagePath);
+  return data.publicUrl;
 }

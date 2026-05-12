@@ -34,14 +34,24 @@ export function ProcessingQueue({ items, onRemove }: Props) {
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
-        <div key={i} className="flex items-start gap-3 rounded-lg border bg-card p-3">
+        <div
+          key={i}
+          className={cn(
+            "flex items-start gap-3 rounded-lg border bg-card p-3.5 border-l-[3px] transition-colors",
+            item.status === "done"      && "border-l-green-400",
+            item.status === "error"     && "border-l-red-400",
+            item.status === "uploading" && "border-l-blue-400",
+            item.status === "processing"&& "border-l-blue-400",
+            item.status === "waiting"   && "border-l-muted-foreground/30",
+          )}
+        >
           <StatusIcon status={item.status} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-medium truncate">{item.file.name}</p>
               <span className={cn(
                 "text-xs shrink-0",
-                item.status === "done" ? "text-green-600" :
+                item.status === "done"  ? "text-green-600" :
                 item.status === "error" ? "text-destructive" :
                 "text-muted-foreground"
               )}>
@@ -49,7 +59,7 @@ export function ProcessingQueue({ items, onRemove }: Props) {
                 {item.status === "done" && item.chunks ? ` · ${item.chunks} chunks` : ""}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1">
+            <div className="flex items-center gap-1.5 mt-1.5">
               {item.collection && (
                 <Badge variant="secondary" className="text-xs">
                   {COLLECTIONS.find((c) => c.value === item.collection)?.label ?? item.collection}
@@ -61,9 +71,10 @@ export function ProcessingQueue({ items, onRemove }: Props) {
                 </Badge>
               )}
             </div>
-            {item.status === "uploading" && <Progress value={50} className="h-1.5 mt-2" />}
-            {item.status === "processing" && <Progress value={75} className="h-1.5 mt-2 animate-pulse" />}
-            {item.error && <p className="text-xs text-destructive mt-1">{item.error}</p>}
+            {item.status === "uploading" && <Progress value={40} className="h-1 mt-2" />}
+            {item.status === "processing" && <Progress value={75} className="h-1 mt-2 animate-pulse" />}
+            {item.status === "done" && <Progress value={100} className="h-1 mt-2" />}
+            {item.error && <p className="text-xs text-destructive mt-1.5">{item.error}</p>}
           </div>
           {item.status === "waiting" && onRemove && (
             <Button

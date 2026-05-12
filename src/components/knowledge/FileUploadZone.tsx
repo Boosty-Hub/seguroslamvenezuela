@@ -45,8 +45,10 @@ export function FileUploadZone({ onFiles, disabled }: Props) {
   return (
     <label
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 cursor-pointer transition-colors",
-        dragging ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30",
+        "flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-10 cursor-pointer transition-all",
+        dragging
+          ? "border-primary bg-primary/8 scale-[1.01]"
+          : "border-muted-foreground/25 hover:border-primary/60 hover:bg-muted/20",
         disabled && "opacity-50 cursor-not-allowed"
       )}
       onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
@@ -61,17 +63,29 @@ export function FileUploadZone({ onFiles, disabled }: Props) {
         onChange={handleChange}
         disabled={disabled}
       />
-      <Upload className="h-10 w-10 text-muted-foreground" />
-      <div className="text-center">
-        <p className="font-medium">Arrastra archivos aqui o haz clic para seleccionar</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Soportado: PDF, DOCX, XLSX, CSV, PNG, JPG
-        </p>
+      <div className={cn(
+        "h-14 w-14 rounded-full flex items-center justify-center transition-colors",
+        dragging ? "bg-primary/15" : "bg-muted"
+      )}>
+        <Upload className={cn("h-6 w-6 transition-colors", dragging ? "text-primary" : "text-muted-foreground")} />
       </div>
-      <div className="flex gap-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> PDF · DOCX · TXT</span>
-        <span className="flex items-center gap-1"><Table className="h-3 w-3" /> XLSX · CSV</span>
-        <span className="flex items-center gap-1"><ImageIcon className="h-3 w-3" /> PNG · JPG</span>
+      <div className="text-center space-y-1">
+        <p className="font-semibold text-sm">Arrastra archivos aquí o haz clic para seleccionar</p>
+        <p className="text-xs text-muted-foreground">Máx. 50 MB por archivo</p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2">
+        {[
+          { icon: <FileText className="h-3 w-3" />, label: "PDF · DOCX · TXT" },
+          { icon: <Table className="h-3 w-3" />, label: "XLSX · CSV" },
+          { icon: <ImageIcon className="h-3 w-3" />, label: "PNG · JPG" },
+        ].map(({ icon, label }) => (
+          <span
+            key={label}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs text-muted-foreground"
+          >
+            {icon} {label}
+          </span>
+        ))}
       </div>
     </label>
   );

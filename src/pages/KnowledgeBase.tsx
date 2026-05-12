@@ -1,6 +1,5 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
-import { ShieldCheck, ArrowLeft, Upload, BookOpen } from "lucide-react";
+import { Upload, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CollectionSelector } from "@/components/knowledge/CollectionSelector";
@@ -71,50 +70,37 @@ export default function KnowledgeBase() {
   const pendingCount = queue.filter((i) => i.status === "waiting").length;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
-        <div className="container flex items-center gap-3 py-4">
-          <div className="flex items-center gap-2 text-primary">
-            <ShieldCheck className="h-7 w-7" />
-            <h1 className="text-xl font-bold tracking-tight">CotiSeguro</h1>
-          </div>
-          <span className="h-5 w-px bg-border" />
-          <span className="text-sm font-medium text-muted-foreground">Base de Conocimiento</span>
-          <div className="ml-auto">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/">
-                <ArrowLeft className="h-4 w-4 mr-1.5" />
-                Volver
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="flex-1 overflow-auto">
+      <div className="border-b bg-card px-6 h-14 flex items-center">
+        <h1 className="text-base font-semibold">Base de Conocimiento</h1>
+      </div>
 
       <main className="container py-6 max-w-3xl space-y-6">
         <div>
           <h2 className="text-2xl font-bold">Base de Conocimiento</h2>
           <p className="text-muted-foreground mt-1 text-sm">
-            Los archivos se procesan en el servidor (Supabase Edge Function) — no colapsa el navegador.
-            El agente en N8N filtra por <code className="bg-muted px-1 rounded text-xs">collection</code> + <code className="bg-muted px-1 rounded text-xs">policy_type</code>.
+            Procesamiento en servidor · El agente filtra por{" "}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">collection</code>{" "}+{" "}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">policy_type</code>
           </p>
         </div>
 
         <Tabs defaultValue="upload">
-          <TabsList>
-            <TabsTrigger value="upload" className="gap-1.5">
-              <Upload className="h-4 w-4" />
+          <TabsList className="h-9">
+            <TabsTrigger value="upload" className="gap-1.5 text-sm">
+              <Upload className="h-3.5 w-3.5" />
               Cargar archivos
             </TabsTrigger>
-            <TabsTrigger value="documents" className="gap-1.5">
-              <BookOpen className="h-4 w-4" />
+            <TabsTrigger value="documents" className="gap-1.5 text-sm">
+              <BookOpen className="h-3.5 w-3.5" />
               Documentos
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="upload" className="space-y-5 mt-4">
+          <TabsContent value="upload" className="space-y-4 mt-5">
             {/* Two-level selector */}
-            <div className="rounded-xl border bg-card p-4 space-y-4">
+            <div className="rounded-xl border bg-card p-5 space-y-4">
+              <p className="text-sm font-semibold text-foreground">Configurar etiquetas</p>
               <CollectionSelector
                 collection={collection}
                 policyType={policyType}
@@ -130,31 +116,35 @@ export default function KnowledgeBase() {
             {/* Queue */}
             {queue.length > 0 && (
               <div className="space-y-3">
-                <ProcessingQueue
-                  items={queue}
-                  onRemove={(i) => setQueue((prev) => prev.filter((_, idx) => idx !== i))}
-                />
-                <div className="flex items-center gap-3">
-                  <Button
-                    onClick={processQueue}
-                    disabled={processing || pendingCount === 0}
-                    className="gap-1.5"
-                  >
-                    {processing ? (
-                      "Procesando en servidor..."
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4" />
-                        Procesar {pendingCount > 0 ? `${pendingCount} archivo${pendingCount > 1 ? "s" : ""}` : ""}
-                      </>
-                    )}
-                  </Button>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium">Cola de archivos <span className="text-muted-foreground font-normal">({queue.length})</span></p>
                   {!processing && (
-                    <Button variant="ghost" size="sm" onClick={() => setQueue([])}>
+                    <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => setQueue([])}>
                       Limpiar lista
                     </Button>
                   )}
                 </div>
+                <ProcessingQueue
+                  items={queue}
+                  onRemove={(i) => setQueue((prev) => prev.filter((_, idx) => idx !== i))}
+                />
+                <Button
+                  onClick={processQueue}
+                  disabled={processing || pendingCount === 0}
+                  className="gap-1.5 w-full sm:w-auto"
+                >
+                  {processing ? (
+                    <>
+                      <Upload className="h-4 w-4 animate-pulse" />
+                      Procesando en servidor...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Procesar {pendingCount > 0 ? `${pendingCount} archivo${pendingCount > 1 ? "s" : ""}` : ""}
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </TabsContent>
