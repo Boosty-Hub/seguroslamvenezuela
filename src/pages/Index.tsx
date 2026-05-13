@@ -51,12 +51,12 @@ const Index = () => {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="border-b bg-card px-6 h-14 flex items-center">
+      <div className="hidden md:flex border-b bg-card px-6 h-14 items-center">
         <h1 className="text-base font-semibold">Cotizaciones</h1>
-        <span className="ml-3 text-sm text-muted-foreground hidden sm:inline">Gestión de cotizaciones de seguros</span>
+        <span className="ml-3 text-sm text-muted-foreground">Gestión de cotizaciones de seguros</span>
       </div>
 
-      <main className="container py-6 space-y-6">
+      <main className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
         <StatsCards quotes={quotes} />
 
         {/* Toolbar */}
@@ -71,6 +71,7 @@ const Index = () => {
             />
           </div>
           <Button
+            className="w-full sm:w-auto"
             onClick={() => {
               setEditing(undefined);
               setDialogOpen(true);

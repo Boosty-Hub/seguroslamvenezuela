@@ -148,12 +148,12 @@ export default function PreciosDiarios() {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="border-b bg-card px-6 h-14 flex items-center">
+      <div className="hidden md:flex border-b bg-card px-6 h-14 items-center">
         <h1 className="text-base font-semibold">Precios del Día</h1>
-        <span className="ml-3 text-sm text-muted-foreground hidden sm:inline">Cotizaciones diarias del mercado</span>
+        <span className="ml-3 text-sm text-muted-foreground">Cotizaciones diarias del mercado</span>
       </div>
 
-      <main className="container py-6 space-y-6">
+      <main className="container py-4 sm:py-6 space-y-4 sm:space-y-6">
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -206,28 +206,28 @@ export default function PreciosDiarios() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <div className="rounded-lg border bg-card/60 px-3 py-2 flex flex-wrap gap-3 items-end">
-            <div className="space-y-1">
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg border bg-card/60 px-3 py-2 flex gap-3 items-end">
+            <div className="space-y-1 flex-1 min-w-0">
               <label className="text-xs font-medium text-muted-foreground">Desde</label>
-              <Input type="date" className="w-38 h-8 text-sm" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
+              <Input type="date" className="w-full h-8 text-sm" value={fechaDesde} onChange={e => setFechaDesde(e.target.value)} />
             </div>
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1 min-w-0">
               <label className="text-xs font-medium text-muted-foreground">Hasta</label>
-              <Input type="date" className="w-38 h-8 text-sm" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
+              <Input type="date" className="w-full h-8 text-sm" value={fechaHasta} onChange={e => setFechaHasta(e.target.value)} />
             </div>
             {(fechaDesde || fechaHasta) && (
-              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setFechaDesde(""); setFechaHasta(""); }}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs shrink-0" onClick={() => { setFechaDesde(""); setFechaHasta(""); }}>
                 Limpiar
               </Button>
             )}
           </div>
-          <div className="flex gap-2 shrink-0">
-            <Button variant="outline" onClick={handleExtract} disabled={extracting} size="sm">
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExtract} disabled={extracting} size="sm" className="flex-1 sm:flex-none">
               <FileText className={`h-4 w-4 mr-1.5 ${extracting ? "animate-pulse" : ""}`} />
               {extracting ? "Extrayendo..." : "Extraer precios"}
             </Button>
-            <Button onClick={handleSync} disabled={syncing}>
+            <Button onClick={handleSync} disabled={syncing} className="flex-1 sm:flex-none">
               <RefreshCw className={`h-4 w-4 mr-1.5 ${syncing ? "animate-spin" : ""}`} />
               {syncing ? (syncStatus || "Sincronizando...") : "Sincronizar ahora"}
             </Button>
@@ -261,11 +261,11 @@ export default function PreciosDiarios() {
 
           {/* ── TAB: CATÁLOGO ── */}
           <TabsContent value="catalogo" className="mt-4 space-y-4">
-            <div className="flex flex-wrap gap-3 items-end">
-              <div className="space-y-1">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-end">
+              <div className="space-y-1 w-full sm:w-auto">
                 <label className="text-xs text-muted-foreground">Aseguradora</label>
                 <select
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm w-52"
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-52"
                   value={catAseg ?? ""}
                   onChange={e => setCatAseg(e.target.value ? Number(e.target.value) : undefined)}
                 >
@@ -275,10 +275,10 @@ export default function PreciosDiarios() {
                   ))}
                 </select>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 w-full sm:w-auto">
                 <label className="text-xs text-muted-foreground">Tipo de plan</label>
                 <select
-                  className="h-9 rounded-md border border-input bg-background px-3 text-sm w-48"
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm w-full sm:w-48"
                   value={catTipo ?? ""}
                   onChange={e => setCatTipo(e.target.value ? Number(e.target.value) : undefined)}
                 >
@@ -366,17 +366,17 @@ function DiaCard({ dia }: { dia: DiaResumen }) {
           <CalendarDays className="h-4 w-4 text-muted-foreground" />
           <span className="font-semibold text-sm">{dia.fecha}</span>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 min-w-[120px]">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end">
+          <div className="flex items-center gap-2 flex-1 max-w-[120px] sm:max-w-[140px]">
             <Progress value={pct} className="h-1.5 flex-1" />
-            <span className="text-xs text-muted-foreground tabular-nums">{pct}%</span>
+            <span className="text-xs text-muted-foreground tabular-nums shrink-0">{pct}%</span>
           </div>
-          <Badge className={`text-xs ${totalOk === 80 ? "bg-green-100 text-green-700" : totalOk > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
-            {totalOk}/80 PDFs
+          <Badge className={`text-xs shrink-0 ${totalOk === 80 ? "bg-green-100 text-green-700" : totalOk > 0 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+            {totalOk}/80
           </Badge>
         </div>
       </div>
-      <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+      <div className="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 items-start">
         {CATEGORIAS_ORDER.map(cat => (
           <SubcategoriaCard key={cat} cat={cat} rangos={dia.categorias[cat] ?? {}} />
         ))}

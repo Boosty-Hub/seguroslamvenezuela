@@ -117,10 +117,13 @@ export function DocumentsList({ refreshTrigger }: Props) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="rounded-lg border bg-card px-3 py-2.5 flex flex-wrap items-center gap-2">
-        <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+      <div className="rounded-lg border bg-card px-3 py-2.5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+        <div className="flex items-center gap-2">
+          <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+          <span className="text-xs font-medium text-muted-foreground sm:hidden">Filtrar por</span>
+        </div>
         <Select value={filterCollection} onValueChange={setFilterCollection}>
-          <SelectTrigger className="w-48 h-8 text-xs">
+          <SelectTrigger className="w-full sm:w-48 h-8 text-xs">
             <SelectValue placeholder="Todas las aseguradoras" />
           </SelectTrigger>
           <SelectContent>
@@ -131,7 +134,7 @@ export function DocumentsList({ refreshTrigger }: Props) {
           </SelectContent>
         </Select>
         <Select value={filterPolicyType} onValueChange={setFilterPolicyType}>
-          <SelectTrigger className="w-44 h-8 text-xs">
+          <SelectTrigger className="w-full sm:w-44 h-8 text-xs">
             <SelectValue placeholder="Todos los tipos" />
           </SelectTrigger>
           <SelectContent>
@@ -141,19 +144,21 @@ export function DocumentsList({ refreshTrigger }: Props) {
             ))}
           </SelectContent>
         </Select>
-        {(filterCollection !== "all" || filterPolicyType !== "all") && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 text-xs text-muted-foreground"
-            onClick={() => { setFilterCollection("all"); setFilterPolicyType("all"); }}
-          >
-            Limpiar filtros
-          </Button>
-        )}
-        <span className="text-xs text-muted-foreground ml-auto">
-          {filtered.length} de {files.length} documento{files.length !== 1 ? "s" : ""}
-        </span>
+        <div className="flex items-center justify-between sm:contents gap-2">
+          {(filterCollection !== "all" || filterPolicyType !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 text-xs text-muted-foreground"
+              onClick={() => { setFilterCollection("all"); setFilterPolicyType("all"); }}
+            >
+              Limpiar filtros
+            </Button>
+          )}
+          <span className="text-xs text-muted-foreground sm:ml-auto">
+            {filtered.length} de {files.length} documento{files.length !== 1 ? "s" : ""}
+          </span>
+        </div>
       </div>
 
       {/* List */}
@@ -261,9 +266,9 @@ export function DocumentsList({ refreshTrigger }: Props) {
               </div>
 
               {editing === file.id && (
-                <div className="flex flex-wrap items-center gap-2 pl-8">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
                   <Select value={editCollection} onValueChange={setEditCollection}>
-                    <SelectTrigger className="w-52 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-52 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -273,7 +278,7 @@ export function DocumentsList({ refreshTrigger }: Props) {
                     </SelectContent>
                   </Select>
                   <Select value={editPolicyType} onValueChange={setEditPolicyType}>
-                    <SelectTrigger className="w-44 h-8 text-xs">
+                    <SelectTrigger className="w-full sm:w-44 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -282,25 +287,27 @@ export function DocumentsList({ refreshTrigger }: Props) {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    size="sm"
-                    className="h-8 gap-1"
-                    disabled={saving}
-                    onClick={() => saveEdit(file)}
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    {saving ? "Guardando..." : "Guardar"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 gap-1"
-                    disabled={saving}
-                    onClick={cancelEdit}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    Cancelar
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="h-8 gap-1 flex-1 sm:flex-none"
+                      disabled={saving}
+                      onClick={() => saveEdit(file)}
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      {saving ? "Guardando..." : "Guardar"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1 flex-1 sm:flex-none"
+                      disabled={saving}
+                      onClick={cancelEdit}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Cancelar
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

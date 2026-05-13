@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { LayoutDashboard, TrendingUp, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const NAV_ITEMS = [
+export const NAV_ITEMS = [
   { to: "/",                   label: "Cotizaciones",        icon: LayoutDashboard, end: true  },
   { to: "/precios-diarios",    label: "Precios del Día",     icon: TrendingUp,      end: false },
   { to: "/base-conocimiento",  label: "Base de Conocimiento",icon: BookOpen,        end: false },

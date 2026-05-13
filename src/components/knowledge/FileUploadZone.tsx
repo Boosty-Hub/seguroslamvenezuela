@@ -45,7 +45,7 @@ export function FileUploadZone({ onFiles, disabled }: Props) {
   return (
     <label
       className={cn(
-        "flex flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-10 cursor-pointer transition-all",
+        "flex flex-col items-center justify-center gap-3 sm:gap-4 rounded-xl border-2 border-dashed p-6 sm:p-10 cursor-pointer transition-all",
         dragging
           ? "border-primary bg-primary/8 scale-[1.01]"
           : "border-muted-foreground/25 hover:border-primary/60 hover:bg-muted/20",
@@ -70,7 +70,10 @@ export function FileUploadZone({ onFiles, disabled }: Props) {
         <Upload className={cn("h-6 w-6 transition-colors", dragging ? "text-primary" : "text-muted-foreground")} />
       </div>
       <div className="text-center space-y-1">
-        <p className="font-semibold text-sm">Arrastra archivos aquí o haz clic para seleccionar</p>
+        <p className="font-semibold text-sm text-center">
+          <span className="hidden sm:inline">Arrastra archivos aquí o haz clic</span>
+          <span className="sm:hidden">Toca para seleccionar archivos</span>
+        </p>
         <p className="text-xs text-muted-foreground">Máx. 50 MB por archivo</p>
       </div>
       <div className="flex flex-wrap justify-center gap-2">

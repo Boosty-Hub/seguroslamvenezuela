@@ -71,11 +71,11 @@ export default function KnowledgeBase() {
 
   return (
     <div className="flex-1 overflow-auto">
-      <div className="border-b bg-card px-6 h-14 flex items-center">
+      <div className="hidden md:flex border-b bg-card px-6 h-14 items-center">
         <h1 className="text-base font-semibold">Base de Conocimiento</h1>
       </div>
 
-      <main className="container py-6 max-w-3xl space-y-6">
+      <main className="container py-4 sm:py-6 max-w-3xl space-y-4 sm:space-y-6">
         <div>
           <h2 className="text-2xl font-bold">Base de Conocimiento</h2>
           <p className="text-muted-foreground mt-1 text-sm">

@@ -39,7 +39,55 @@ export function QuotesTable({ quotes, onEdit, onDelete }: Props) {
 
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="overflow-x-auto">
+      {/* Mobile: card list */}
+      <div className="md:hidden divide-y">
+        {quotes.map((q) => (
+          <div key={q.id} className="p-4 space-y-2.5 animate-fade-in">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium truncate">{q.clientName}</p>
+                {q.clientEmail && (
+                  <p className="text-xs text-muted-foreground truncate">{q.clientEmail}</p>
+                )}
+              </div>
+              <QuoteStatusBadge status={q.status} />
+            </div>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs">
+              <span className="inline-flex items-center rounded-md bg-accent px-2 py-0.5 font-medium text-accent-foreground">
+                {q.insuranceType}
+              </span>
+              <span className="text-muted-foreground">{q.insurer}</span>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <span className="font-semibold tabular-nums text-sm">{formatCurrency(q.premium)}</span>
+                <span className="text-xs text-muted-foreground ml-2">{formatDate(q.createdAt)}</span>
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10"
+                  onClick={() => onEdit(q)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 text-destructive hover:text-destructive"
+                  onClick={() => onDelete(q.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 hover:bg-muted/50">
@@ -83,7 +131,12 @@ export function QuotesTable({ quotes, onEdit, onDelete }: Props) {
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(q)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => onDelete(q.id)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => onDelete(q.id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

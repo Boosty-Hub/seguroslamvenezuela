@@ -33,7 +33,7 @@ export function CollectionSelector({
           Selecciona la aseguradora
         </p>
         <Select value={collection} onValueChange={onCollectionChange} disabled={disabled}>
-          <SelectTrigger className="w-72">
+          <SelectTrigger className="w-full sm:w-72">
             <SelectValue placeholder="Elige una aseguradora..." />
           </SelectTrigger>
           <SelectContent>
