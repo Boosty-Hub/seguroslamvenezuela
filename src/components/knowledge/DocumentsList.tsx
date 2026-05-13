@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Trash2, FileText, RefreshCw, Filter, Pencil, Check, X, Download } from "lucide-react";
+import { Trash2, FileText, RefreshCw, Filter, Pencil, Check, X, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getKnowledgeFiles, deleteKnowledgeFile, updateKnowledgeFile, getKnowledgeFileDownloadUrl, type KnowledgeFile } from "@/lib/supabaseVector";
+import { getKnowledgeFiles, deleteKnowledgeFile, updateKnowledgeFile, type KnowledgeFile } from "@/lib/supabaseVector";
 import { COLLECTIONS, POLICY_TYPES } from "@/lib/collections";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentPreviewModal } from "./DocumentPreviewModal";
 
 interface Props {
   refreshTrigger?: number;
@@ -22,6 +23,7 @@ export function DocumentsList({ refreshTrigger }: Props) {
   const [saving, setSaving] = useState(false);
   const [filterCollection, setFilterCollection] = useState("all");
   const [filterPolicyType, setFilterPolicyType] = useState("all");
+  const [previewFile, setPreviewFile] = useState<KnowledgeFile | null>(null);
   const { toast } = useToast();
 
   const load = async () => {
@@ -49,18 +51,6 @@ export function DocumentsList({ refreshTrigger }: Props) {
     } finally {
       setDeleting(null);
     }
-  };
-
-  const handleDownload = (file: KnowledgeFile) => {
-    if (!file.storage_path) return;
-    const url = getKnowledgeFileDownloadUrl(file.storage_path);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = file.name;
-    a.target = "_blank";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   };
 
   const startEdit = (file: KnowledgeFile) => {
@@ -115,6 +105,7 @@ export function DocumentsList({ refreshTrigger }: Props) {
   }
 
   return (
+    <>
     <div className="space-y-4">
       {/* Filters */}
       <div className="rounded-lg border bg-card px-3 py-2.5 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
@@ -203,16 +194,16 @@ export function DocumentsList({ refreshTrigger }: Props) {
 
                 {editing !== file.id && confirmDelete !== file.id && (
                   <>
-                    {/* Download original file */}
+                    {/* Preview / download */}
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 shrink-0 text-muted-foreground hover:text-primary"
-                      title={file.storage_path ? "Descargar archivo original" : "Archivo original no disponible (subido antes de esta versión)"}
-                      disabled={!file.storage_path || !!deleting}
-                      onClick={() => handleDownload(file)}
+                      title={file.storage_path ? "Ver / descargar archivo" : "Archivo original no disponible (subido antes de esta versión)"}
+                      disabled={!!deleting}
+                      onClick={() => setPreviewFile(file)}
                     >
-                      <Download className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
 
                     {/* Edit metadata */}
@@ -315,6 +306,9 @@ export function DocumentsList({ refreshTrigger }: Props) {
         </div>
       )}
     </div>
+
+    <DocumentPreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
+    </>
   );
 }
 
