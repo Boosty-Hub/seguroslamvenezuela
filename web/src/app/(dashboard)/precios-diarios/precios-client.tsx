@@ -116,7 +116,7 @@ export default function PreciosClient() {
                 {loading ? (
                   <tr><td colSpan={5} className="px-4 py-8 text-center text-neutral-400">Cargando…</td></tr>
                 ) : rows.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-neutral-500">Sin precios para esta combinación. Probá "Extraer precios".</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-neutral-500">Sin precios para esta combinación. Probá «Extraer precios».</td></tr>
                 ) : (
                   rows.map((r, i) => (
                     <tr key={i} className="hover:bg-neutral-50">
