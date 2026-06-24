@@ -43,9 +43,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `collection inválida: ${collection}` }, { status: 400 });
   if (policyType && !isValidPolicyType(policyType))
     return NextResponse.json({ error: `policy_type inválido: ${policyType}` }, { status: 400 });
+
+  // Vertical (opcional, validada contra la tabla verticals). Es el eje por el que
+  // el agente filtra search_kb una vez identificado el ramo del mensaje.
+  const vertical = (form.get("vertical") as string | null)?.trim() || null;
+  if (vertical) {
+    const { data: vRow } = await supabase
+      .from("verticals")
+      .select("slug")
+      .eq("slug", vertical)
+      .maybeSingle();
+    if (!vRow) return NextResponse.json({ error: `vertical inválida: ${vertical}` }, { status: 400 });
+  }
+
   const tax: Record<string, string> = {};
   if (collection) tax.collection = collection;
   if (policyType) tax.policy_type = policyType;
+  if (vertical) tax.vertical = vertical;
 
   // ── Extracción de texto ──────────────────────────────────────────────────
   let text: string;
@@ -115,6 +129,7 @@ export async function POST(request: Request) {
       metadata: { format, ...tax },
       collection,
       policy_type: policyType,
+      vertical,
       status: "processing",
     })
     .select("id")

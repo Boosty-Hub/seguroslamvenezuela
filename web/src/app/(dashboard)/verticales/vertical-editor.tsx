@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Modal, Button, ConfirmDialog, Switch, inputCls } from "@/components/ui";
+import VerticalKbPanel from "./vertical-kb-panel";
 
 type Vertical = {
   id: string;
@@ -303,6 +304,9 @@ function VerticalForm({ vertical, onDone }: { vertical: Vertical; onDone: () => 
           className={`${inputCls} min-h-[6rem] resize-y font-mono`}
         />
       </div>
+
+      <VerticalKbPanel slug={vertical.slug} />
+
       {error && <p className="text-sm text-red-600">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" variant="primary" busy={busy} disabled={busy}>

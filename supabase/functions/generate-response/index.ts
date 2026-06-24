@@ -48,7 +48,7 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
 });
 
 // ---------------- search_kb tool implementation ----------------
-async function runSearchKb(input: { query: string; limit?: number; collection?: string; policy_type?: string }) {
+async function runSearchKb(input: { query: string; limit?: number; collection?: string; policy_type?: string; vertical?: string }) {
   // 1) Embeber el query
   const embedRes = await fetch(`${SUPABASE_URL}/functions/v1/embed`, {
     method: "POST",
@@ -63,8 +63,9 @@ async function runSearchKb(input: { query: string; limit?: number; collection?: 
   }
   const { embeddings } = (await embedRes.json()) as { embeddings: number[][] };
 
-  // 2) Filtro opcional por taxonomía (aseguradora / tipo de póliza). {} = sin filtro.
+  // 2) Filtro opcional por taxonomía (vertical / aseguradora / tipo de póliza). {} = sin filtro.
   const p_filter: Record<string, string> = {};
+  if (input.vertical) p_filter.vertical = input.vertical;
   if (input.collection) p_filter.collection = input.collection;
   if (input.policy_type) p_filter.policy_type = input.policy_type;
 
