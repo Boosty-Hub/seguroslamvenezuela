@@ -42,6 +42,7 @@ export async function syncAgentTools(actor: string): Promise<SyncResult> {
     "MEMORY_STORE_MASTER_NAME",
     "MEMORY_STORE_LEADS_NAME",
     "SYSTEM_PROMPT",
+    "AGENT_MODEL",
   ]);
 
   const apiKey = cfg.ANTHROPIC_API_KEY;
@@ -93,6 +94,7 @@ export async function syncAgentTools(actor: string): Promise<SyncResult> {
       const current = await retrieveAgent(apiKey, agentId);
       const updated = await updateAgent(apiKey, agentId, {
         version: current.version,
+        model: cfg.AGENT_MODEL || "claude-sonnet-4-6",
         system,
         tools,
       });
