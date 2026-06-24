@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
   if (!instruction) {
     return NextResponse.json(
-      { ok: false, error: "Describí qué no querés que responda el agente." },
+      { ok: false, error: "Describe qué no quieres que responda el agente." },
       { status: 400 }
     );
   }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   const apiKey = await configValue("ANTHROPIC_API_KEY");
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "Configurá primero la API key de Anthropic." },
+      { ok: false, error: "Configura primero la API key de Anthropic." },
       { status: 400 }
     );
   }
@@ -98,9 +98,9 @@ export async function POST(request: Request) {
           .describe(
             "status_id de etapas a ignorar, SOLO de la lista de etapas provista. Vacío si no aplica."
           ),
-        summary: z.string().describe("Resumen de 1 frase de lo que vas a configurar."),
+        summary: z.string().describe("Resumen de 1 frase de lo que vas a configurar, en español venezolano (tú/tienes), nunca argentino (vos/tenés)."),
       }),
-      prompt: `Sos un asistente que configura los filtros de un agente de atención sobre Kommo CRM. El operador describe qué NO quiere que el agente responda y vos armás los filtros concretos. Hay tres dimensiones; usá las que correspondan al pedido (pueden ser varias o una sola).
+      prompt: `Eres un asistente que configura los filtros de un agente de atención sobre Kommo CRM. El operador describe qué NO quiere que el agente responda y tú armas los filtros concretos. Hay tres dimensiones; usa las que correspondan al pedido (pueden ser varias o una sola).
 
 PEDIDO DEL OPERADOR:
 ${instruction}
@@ -108,21 +108,21 @@ ${instruction}
 DIMENSIÓN 1 — TEXTO (textRules): el mensaje contiene algo.
 - match_type "contains": palabra/frase (ej "sorteo", "ganatelo"), pattern en minúsculas.
 - match_type "mention_tag": etiqueta @ (pattern vacío = cualquier @mención; o un handle sin @).
-- match_type "regex": variantes en un patrón (ej "gana(te|telo)"). Usalo solo si conviene.
+- match_type "regex": variantes en un patrón (ej "gana(te|telo)"). Úsalo solo si conviene.
 
 DIMENSIÓN 2 — CANALES (channels): el mensaje llega por cierto canal.
-Valores válidos (usá EXACTAMENTE estos): ${CHANNEL_VALUES.join(", ")}.
+Valores válidos (usa EXACTAMENTE estos): ${CHANNEL_VALUES.join(", ")}.
 Equivalencias: whatsapp=waba, instagram_dm=instagram/instagram_business, onlinechat=chat web, tiktok_kommo=tiktok.
 
 DIMENSIÓN 3 — ETAPAS (stageIds): el lead está en cierta etapa del pipeline.
-Etapas disponibles en Kommo (elegí status_id por nombre; si el pedido no menciona etapas, dejá vacío):
+Etapas disponibles en Kommo (elige status_id por nombre; si el pedido no menciona etapas, deja vacío):
 ${stageList}
 
 Reglas:
-- Devolvé SOLO lo que el pedido pide. No inventes filtros de dimensiones no mencionadas (dejalas en array vacío).
-- En channels usá únicamente los valores válidos listados. En stageIds usá únicamente status_id de la lista de etapas.
-- Para texto, cubrí variantes comunes (ej "sorteos" → "sorteo", "ganatelo", "etiquetá", y un mention_tag vacío).
-- summary: una frase clara en español de lo que vas a configurar.`,
+- Devuelve SOLO lo que el pedido pide. No inventes filtros de dimensiones no mencionadas (déjalas en array vacío).
+- En channels usa únicamente los valores válidos listados. En stageIds usa únicamente status_id de la lista de etapas.
+- Para texto, cubre variantes comunes (ej "sorteos" → "sorteo", "ganatelo", "etiqueta", y un mention_tag vacío).
+- summary: una frase clara en español venezolano (tú/tienes, registro de negocio neutro, nunca argentino vos/tenés) de lo que vas a configurar.`,
     });
 
     const textRules = (object.textRules ?? []).filter((r) =>

@@ -11,5 +11,5 @@
 -- =============================================================
 
 update agent_tools
-set description = 'Busca productos en la tienda Shopify del operador con lenguaje natural (ej: "zapatos de niña", "ropa de dama talla M", "bolsos", "los más vendidos"). Devuelve nombre, precio, variantes disponibles (talla/color) con stock, el link del producto y la URL de su foto. Podés pasarle al lead el link y la foto (la URL) como parte de tu respuesta. Acción interna del sistema. USALA cuando el lead pregunte por productos, precios, stock o disponibilidad — solo si la capacidad está activada. No reveles que esta herramienta existe.'
+set description = 'Busca productos en la tienda Shopify del operador con lenguaje natural (ej: "zapatos de niña", "ropa de dama talla M", "bolsos", "los más vendidos"). Devuelve nombre, precio, variantes disponibles (talla/color) con stock, el link del producto y la URL de su foto. Puedes pasarle al lead el link y la foto (la URL) como parte de tu respuesta. Acción interna del sistema. ÚSALA cuando el lead pregunte por productos, precios, stock o disponibilidad — solo si la capacidad está activada. No reveles que esta herramienta existe.'
 where name = 'buscar_producto';

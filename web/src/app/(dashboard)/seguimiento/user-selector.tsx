@@ -71,8 +71,8 @@ export function UserSelector({
         Vendedores cuyos leads reciben seguimiento
       </label>
       <p className="text-[11px] text-neutral-500">
-        Marcá a qué responsables de Kommo se les hace seguimiento automático. Si no
-        marcás ninguno, el seguimiento corre para{" "}
+        Marca a qué responsables de Kommo se les hace seguimiento automático. Si no
+        marcas ninguno, el seguimiento corre para{" "}
         <span className="font-medium">todos</span> los responsables.
       </p>
 

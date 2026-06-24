@@ -88,7 +88,7 @@ async function runSearchKb(input: { query: string; limit?: number; collection?: 
   }>;
 
   if (rows.length === 0) {
-    return "Sin resultados en la KB para ese query. Asumí que la info no está documentada.";
+    return "Sin resultados en la KB para ese query. Asume que la info no está documentada.";
   }
 
   return rows
@@ -321,7 +321,7 @@ async function runCrmTool(
     }
     if (matches.length > 1) {
       const opciones = matches.map((s) => `pipeline "${s.pipelineName}"`).join(", ");
-      return `La etapa "${stageName}" existe en varios pipelines (${opciones}). Especificá 'pipeline_name' y reintentá.`;
+      return `La etapa "${stageName}" existe en varios pipelines (${opciones}). Especifica 'pipeline_name' y reintenta.`;
     }
     const target = matches[0];
     await moveLeadStage(ctx.kommoLeadId, target.id, target.pipelineId, ctx.domain, ctx.token);
@@ -715,7 +715,7 @@ async function pickLeadBatch(
       console.warn("sweep select:", sweepErr.message);
     } else if (dead && dead.length > 0) {
       // Guarda status=pending también en el delete: si un run lento terminó
-      // (approved) entre el select y acá, no se borra su respuesta.
+      // (approved) entre el select y aquí, no se borra su respuesta.
       const { error: delErr } = await supabase
         .from("drafts")
         .delete()
@@ -922,8 +922,8 @@ function buildContext(opts: {
 
   return `[CONTEXTO]
 fecha_hora_actual: ${opts.now} (zona horaria ${opts.timezone})
-en_horario_laboral: ${opts.businessHours.active ? "sí" : "no"} (${opts.businessHours.label}). Si es "no" y el lead necesita un asesor humano, avisale que el equipo lo contacta apenas retome el horario de atención — no prometas transferencia inmediata.
-${opts.activePromos ? `promociones_activas (mencionalas solo si vienen al caso de lo que pregunta el lead):\n${opts.activePromos}` : "promociones_activas: ninguna"}${opts.upcomingEvents ? `\neventos_proximos (podes anticiparlos si aportan a la conversacion):\n${opts.upcomingEvents}` : ""}${opts.commentInstructions != null ? `\norigen_comentario_instagram: sí — ${opts.commentInstructions}` : ""}
+en_horario_laboral: ${opts.businessHours.active ? "sí" : "no"} (${opts.businessHours.label}). Si es "no" y el lead necesita un asesor humano, avísale que el equipo lo contacta apenas retome el horario de atención — no prometas transferencia inmediata.
+${opts.activePromos ? `promociones_activas (menciónalas solo si vienen al caso de lo que pregunta el lead):\n${opts.activePromos}` : "promociones_activas: ninguna"}${opts.upcomingEvents ? `\neventos_proximos (puedes anticiparlos si aportan a la conversacion):\n${opts.upcomingEvents}` : ""}${opts.commentInstructions != null ? `\norigen_comentario_instagram: sí — ${opts.commentInstructions}` : ""}
 lead_id: ${opts.lead.id}
 lead_name: ${opts.lead.display_name ?? "(desconocido)"}
 vertical: ${opts.verticalSlug}
@@ -939,7 +939,7 @@ ${header}
 ${block}
 """
 
-Procede según tu system prompt: revisa ${opts.masterPath}/voice/ y ${opts.masterPath}/dreams/ para reglas, lee la memoria del lead si existe, usa search_kb si la pregunta es factual, redacta la respuesta con la voz definida en tu system prompt, actualiza ${opts.leadsPath}/${opts.lead.id}/. Usá fecha_hora_actual para cualquier cosa relativa al tiempo (hoy, mañana, vencimientos, horarios, días de demora).
+Procede según tu system prompt: revisa ${opts.masterPath}/voice/ y ${opts.masterPath}/dreams/ para reglas, lee la memoria del lead si existe, usa search_kb si la pregunta es factual, redacta la respuesta con la voz definida en tu system prompt, actualiza ${opts.leadsPath}/${opts.lead.id}/. Usa fecha_hora_actual para cualquier cosa relativa al tiempo (hoy, mañana, vencimientos, horarios, días de demora).
 
 Tu MENSAJE FINAL debe ser SOLO el texto que se envía al lead. Sin preámbulo.`;
 }
@@ -984,13 +984,13 @@ async function runAgent(opts: {
         type: "memory_store",
         memory_store_id: opts.memstoreMaster,
         access: "read_only",
-        instructions: `Voz del operador (reglas + ejemplos) en /voice/. Knowledge base destilada en /kb/. Aprendizajes de Dreams en /dreams/. Consultá antes de redactar.`,
+        instructions: `Voz del operador (reglas + ejemplos) en /voice/. Knowledge base destilada en /kb/. Aprendizajes de Dreams en /dreams/. Consulta antes de redactar.`,
       },
       {
         type: "memory_store",
         memory_store_id: opts.memstoreLeads,
         access: "read_write",
-        instructions: `Memoria por lead. El lead actual es ${opts.leadId}. Leé /${opts.leadId}/conversation.md y /${opts.leadId}/learnings.md si existen. Después de responder, escribí turn nuevo a conversation.md (formato: '## YYYY-MM-DD HH:MM\\nLead: <msg>\\nAgente: <respuesta>\\n').`,
+        instructions: `Memoria por lead. El lead actual es ${opts.leadId}. Lee /${opts.leadId}/conversation.md y /${opts.leadId}/learnings.md si existen. Después de responder, escribe turn nuevo a conversation.md (formato: '## YYYY-MM-DD HH:MM\\nLead: <msg>\\nAgente: <respuesta>\\n').`,
       },
     ],
   });
@@ -1066,7 +1066,7 @@ async function runAgent(opts: {
           } else {
             try {
               const r = await getBcvRate(opts.cfg);
-              result = `Tasa oficial BCV vigente: 1 USD = ${r.rate} Bs (fuente: ${r.source}, obtenida: ${r.fetchedAt}). Usala como referencia aproximada del día; el monto exacto en bolívares lo confirma el operador al cobrar.`;
+              result = `Tasa oficial BCV vigente: 1 USD = ${r.rate} Bs (fuente: ${r.source}, obtenida: ${r.fetchedAt}). Úsala como referencia aproximada del día; el monto exacto en bolívares lo confirma el operador al cobrar.`;
             } catch (err) {
               // El detalle (status HTTP, fuente custom) va al log, NO al agente:
               // el tool result puede terminar relayado textual al cliente final.
@@ -1333,7 +1333,7 @@ Deno.serve(async (req: Request) => {
         const rawInstructions = (cfg as Record<string, unknown> | null)?.comment_instructions;
         commentInstructions = typeof rawInstructions === "string" && rawInstructions.trim()
           ? rawInstructions.trim()
-          : "El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconocé el origen con naturalidad (ej: \"vi tu comentario 😊\"), andá directo al grano.";
+          : "El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconoce el origen con naturalidad (ej: \"vi tu comentario 😊\"), ve directo al grano.";
       }
 
       const contextMessage = buildContext({
@@ -1393,7 +1393,7 @@ Deno.serve(async (req: Request) => {
         const rawRules = (cfg as Record<string, unknown> | null)?.comment_reply_rules;
         const replyRules = typeof rawRules === "string" && rawRules.trim()
           ? rawRules.trim()
-          : "Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invitá al DM (\"te pasamos el detalle por DM 💛\"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradecé breve.";
+          : "Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invita al DM (\"te pasamos el detalle por DM 💛\"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradece breve.";
         try {
           const operator = resolvedCfg.getOr("OPERATOR_NAME", "el negocio");
           // Modelo de la respuesta pública: editable desde /consumo.
@@ -1404,7 +1404,7 @@ Deno.serve(async (req: Request) => {
           const haikuRes = await anthropic.messages.create({
             model: commentReplyModel,
             max_tokens: 200,
-            system: `Sos el community manager de ${operator}. Redactás UNA respuesta pública a un comentario de Instagram. Reglas OBLIGATORIAS del negocio:\n${replyRules}\nRespondé SOLO con el texto del comentario de respuesta, sin comillas ni explicaciones.`,
+            system: `Eres el community manager de ${operator}. Redactas UNA respuesta pública a un comentario de Instagram. Reglas OBLIGATORIAS del negocio:\n${replyRules}\nResponde SOLO con el texto del comentario de respuesta, sin comillas ni explicaciones.`,
             messages: [
               {
                 role: "user",

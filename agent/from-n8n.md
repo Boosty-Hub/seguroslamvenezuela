@@ -2,7 +2,7 @@
 
 > **Importante**: este doc se aplica DESPUÉS de Fase 0 de `SETUP-WITH-CLAUDE.md` (cuando el usuario ya tiene su repo propio creado a partir del template). Toda edición sucede en el repo nuevo, NUNCA en el template.
 >
-> Si sos Claude leyendo esto: el usuario te pasó un workflow exportado de n8n (JSON) y querés reusar lo que se pueda. Este doc te dice qué buscar y dónde mapearlo. Mapeás al repo nuevo (el del agente), no al template.
+> Si eres Claude leyendo esto: el usuario te pasó un workflow exportado de n8n (JSON) y quieres reusar lo que se pueda. Este doc te dice qué buscar y dónde mapearlo. Mapeas al repo nuevo (el del agente), no al template.
 
 ## Cómo viene un workflow de n8n
 
@@ -27,19 +27,19 @@ Un export de n8n es un JSON con esta forma:
 
 ### 1. System prompt del agente
 
-**Buscar**: nodos de tipo `@n8n/n8n-nodes-langchain.anthropic`, `n8n-nodes-base.httpRequest` apuntando a `api.anthropic.com`, o nodos de OpenAI/cualquier LLM. Mirá `parameters.options.systemMessage`, `parameters.messages[0].content` (role system), o `parameters.jsonBody`.
+**Buscar**: nodos de tipo `@n8n/n8n-nodes-langchain.anthropic`, `n8n-nodes-base.httpRequest` apuntando a `api.anthropic.com`, o nodos de OpenAI/cualquier LLM. Mira `parameters.options.systemMessage`, `parameters.messages[0].content` (role system), o `parameters.jsonBody`.
 
-**Mapear a**: `agent/system-prompt.md`. Pegá el system prompt como está y ajustá:
-- Reemplazá referencias del modelo anterior (gpt-4, etc.) por la lógica del template (Sonnet 4.6).
-- Si tiene instrucciones sobre paths de archivos (n8n usa otros), reemplazá por los placeholders `{{MASTER_PATH}}` y `{{LEADS_PATH}}` — se sustituyen automáticamente cuando guardás el prompt desde el dashboard (wizard `/setup` o editor `/agent`, vía `web/src/lib/agent-prompt.ts`).
-- Si menciona herramientas del workflow n8n (HTTP nodes, Function nodes), describí la intención pero quitá los detalles técnicos — el agente acá usa solo la tool `search_kb`.
+**Mapear a**: `agent/system-prompt.md`. Pega el system prompt como está y ajusta:
+- Reemplaza referencias del modelo anterior (gpt-4, etc.) por la lógica del template (Sonnet 4.6).
+- Si tiene instrucciones sobre paths de archivos (n8n usa otros), reemplaza por los placeholders `{{MASTER_PATH}}` y `{{LEADS_PATH}}` — se sustituyen automáticamente cuando guardas el prompt desde el dashboard (wizard `/setup` o editor `/agent`, vía `web/src/lib/agent-prompt.ts`).
+- Si menciona herramientas del workflow n8n (HTTP nodes, Function nodes), describe la intención pero quita los detalles técnicos — el agente aquí usa solo la tool `search_kb`.
 
 ### 2. Modelo y parámetros
 
 **Buscar**: `parameters.model` (suele ser `claude-3-5-sonnet`, `gpt-4`, etc.), `temperature`, `maxTokens`.
 
 **Mapear a**:
-- `.env.local` → `AGENT_MODEL` (convertí al nombre Anthropic actual; si era OpenAI, recomendá `claude-sonnet-4-6`).
+- `.env.local` → `AGENT_MODEL` (convierte al nombre Anthropic actual; si era OpenAI, recomienda `claude-sonnet-4-6`).
 - `temperature` y `maxTokens` del template no son configurables a nivel agent (vienen del CMA). Si el usuario los necesita custom, marcar como tarea pendiente y avisar.
 
 ### 3. Identidad del operador
@@ -59,7 +59,7 @@ Un export de n8n es un JSON con esta forma:
 
 **Mapear a**:
 - `.env.local` → `KOMMO_SUBDOMAIN`, `KOMMO_API_DOMAIN` (preguntar al usuario el token y client_id/secret).
-- Dashboard `/settings` (configuración runtime, NO env var) → `response_custom_field_id`, `salesbot_id`. Anotalos para configurarlos después.
+- Dashboard `/settings` (configuración runtime, NO env var) → `response_custom_field_id`, `salesbot_id`. Anótalos para configurarlos después.
 
 ### 5. Webhook entrante de Kommo
 
@@ -91,7 +91,7 @@ Por cada categoría que veas:
 
 **Buscar**: nodos que cargan archivos, queries a vector stores (Pinecone, Supabase Vector, etc.), o que pasan documentos al LLM.
 
-**Mapear a**: dashboard `/kb` (después del setup). Si en el JSON aparecen los textos/docs inline, decile al usuario que los puede subir en /kb directamente cuando arrancamos el dashboard.
+**Mapear a**: dashboard `/kb` (después del setup). Si en el JSON aparecen los textos/docs inline, dile al usuario que los puede subir en /kb directamente cuando arrancamos el dashboard.
 
 ### 8. Voz / few-shot examples
 
@@ -112,7 +112,7 @@ n8n no tiene un equivalente nativo. Si el workflow tiene algún nodo evaluador p
 ## Lo que NO se migra automáticamente
 
 - Credenciales OAuth (Kommo no las exporta — hay que regenerar).
-- Lógica custom en nodos `Function` o `Code` — léela, entendé qué hace, y discutí con el usuario si:
+- Lógica custom en nodos `Function` o `Code` — léela, entiende qué hace, y discute con el usuario si:
   - Se puede expresar como una vertical / prompt / KB → mapear.
   - Es algo que el template no soporta → marcar como deuda pendiente.
 

@@ -27,6 +27,6 @@ alter table messages
 
 update kommo_publish_config
 set
-  comment_reply_rules  = coalesce(comment_reply_rules, 'Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invitá al DM ("te pasamos el detalle por DM 💛"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradecé breve.'),
-  comment_instructions = coalesce(comment_instructions, 'El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconocé el origen con naturalidad (ej: "vi tu comentario 😊"), andá directo al grano.')
+  comment_reply_rules  = coalesce(comment_reply_rules, 'Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invita al DM ("te pasamos el detalle por DM 💛"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradece breve.'),
+  comment_instructions = coalesce(comment_instructions, 'El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconoce el origen con naturalidad (ej: "vi tu comentario 😊"), ve directo al grano.')
 where is_active = true;

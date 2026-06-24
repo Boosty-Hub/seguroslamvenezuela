@@ -65,7 +65,7 @@ export function Initialize({
 
   async function runInitialize() {
     if (!accessToken.trim()) {
-      setError("Pegá tu token de Supabase para continuar.");
+      setError("Pega tu token de Supabase para continuar.");
       return;
     }
     setError(null);
@@ -163,7 +163,7 @@ export function Initialize({
           disabled={running}
         />
         <p className="text-xs text-neutral-500">
-          Generalo en{" "}
+          Genéralo en{" "}
           <a
             href="https://supabase.com/dashboard/account/tokens"
             target="_blank"
@@ -197,7 +197,7 @@ export function Initialize({
       {error && (
         <div className="space-y-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
           <p className="font-medium">
-            Algo falló, pero podés reintentar — sigue desde donde quedó.
+            Algo falló, pero puedes reintentar — sigue desde donde quedó.
           </p>
           <p className="font-mono">{error}</p>
         </div>

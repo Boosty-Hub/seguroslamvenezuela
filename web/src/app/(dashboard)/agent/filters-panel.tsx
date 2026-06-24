@@ -331,7 +331,7 @@ function AiAssist({
 
   async function generate() {
     if (!prompt.trim()) {
-      setError("Describí qué no querés que responda el agente.");
+      setError("Describe qué no quieres que responda el agente.");
       return;
     }
     setBusy(true);
@@ -353,7 +353,7 @@ function AiAssist({
       };
       setResult(r);
       if (r.textRules.length === 0 && r.channels.length === 0 && r.stages.length === 0) {
-        setError("La IA no propuso filtros. Probá reformular el pedido.");
+        setError("La IA no propuso filtros. Prueba reformular el pedido.");
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -415,7 +415,7 @@ function AiAssist({
       <div>
         <p className="text-sm font-medium text-neutral-800">✨ Configurar filtros con IA</p>
         <p className="text-xs text-neutral-500">
-          Describí qué NO querés que el agente responda — palabras, canales o etapas — y la IA lo
+          Describe qué NO quieres que el agente responda — palabras, canales o etapas — y la IA lo
           arma. Ej: «que no responda sorteos, ni por TikTok, ni leads en la etapa Cerrado».
         </p>
       </div>
@@ -574,7 +574,7 @@ function SkipRulesSection({
       {rules.length === 0 && !adding ? (
         <div className="rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-8 text-center">
           <p className="text-sm text-neutral-500">
-            No hay filtros de texto. Agregá uno o pedíselo a la IA.
+            No hay filtros de texto. Agrega uno o pídeselo a la IA.
           </p>
         </div>
       ) : (
@@ -907,7 +907,7 @@ function StagesSection({ ignoredStageIds }: { ignoredStageIds: number[] }) {
         <p className="text-sm text-red-600">No se pudieron traer las etapas: {error}</p>
       ) : !configured ? (
         <p className="text-sm text-neutral-500">
-          Conectá Kommo en el{" "}
+          Conecta Kommo en el{" "}
           <a href="/setup" className="font-medium text-neutral-700 underline">
             setup
           </a>{" "}
@@ -1289,7 +1289,7 @@ function LimitsSection({ limits }: { limits: Limits }) {
               .filter(Boolean)
               .join(" · ")
       }
-      description="Evitá que el agente conteste de más al mismo contacto."
+      description="Evita que el agente conteste de más al mismo contacto."
     >
       <div className="space-y-5">
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
@@ -1475,7 +1475,7 @@ function MediaSection({ media, hasOpenaiKey }: { media: MediaFlags; hasOpenaiKey
       }
       description={
         <>
-          Permití que el agente <span className="font-medium text-neutral-700">responda</span> a lo
+          Permite que el agente <span className="font-medium text-neutral-700">responda</span> a lo
           que el lead envía. Las fotos y los PDF los entiende Claude de forma nativa.
         </>
       }
@@ -1531,7 +1531,7 @@ function MediaSection({ media, hasOpenaiKey }: { media: MediaFlags; hasOpenaiKey
           {askKey && !media.audio && (
             <div className="mt-3 space-y-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
               <p className="text-xs text-neutral-600">
-                Pegá tu API key de OpenAI (se guarda en la configuración del proyecto y solo se
+                Pega tu API key de OpenAI (se guarda en la configuración del proyecto y solo se
                 usa para transcribir audios):
               </p>
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -1593,7 +1593,7 @@ export function FiltersPanel({
       <p className="text-sm text-neutral-600">
         Cómo y cuándo responde el agente: agrupado de mensajes, multimedia, límites, y todo lo que
         hace que <span className="font-medium">no responda</span> (por lead, menciones, canales,
-        etapas, categorías). Pedíselo a la IA o configuralo a mano.
+        etapas, categorías). Pídeselo a la IA o configúralo a mano.
       </p>
       <BatchingSection debounce={debounce} />
       <FreshnessSection freshness={freshness} />

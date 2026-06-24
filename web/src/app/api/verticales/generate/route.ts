@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const instruction = typeof body.instruction === "string" ? body.instruction.trim() : "";
   if (!instruction) {
     return NextResponse.json(
-      { ok: false, error: "Describí qué vertical querés crear." },
+      { ok: false, error: "Describe qué vertical quieres crear." },
       { status: 400 }
     );
   }
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "Configurá primero la API key de Anthropic." },
+      { ok: false, error: "Configura primero la API key de Anthropic." },
       { status: 400 }
     );
   }
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     .join("\n\n");
 
   const currentBlock = current
-    ? `\n\nVERTICAL ACTUAL (refinála, no empieces de cero):
+    ? `\n\nVERTICAL ACTUAL (refínala, no empieces de cero):
 nombre: ${current.name ?? ""}
 descripción: ${current.description ?? ""}
 system_prompt actual:
@@ -104,7 +104,7 @@ ${current.system_prompt ?? ""}`
         system_prompt: z
           .string()
           .describe(
-            "Instrucción breve (2-4 frases) para el agente sobre cómo manejar este tipo de mensaje, en la voz del operador. En segunda persona dirigido al agente, español neutro, sin el nombre literal del negocio."
+            "Instrucción breve (2-4 frases) para el agente sobre cómo manejar este tipo de mensaje, en la voz del operador. En segunda persona dirigido al agente, en español venezolano (tú/tienes, registro de negocio neutro, nunca argentino vos/tenés), sin el nombre literal del negocio."
           ),
         auto_reply: z
           .boolean()
@@ -117,9 +117,9 @@ ${current.system_prompt ?? ""}`
             "true si SIEMPRE debe pasar por revisión humana (temas sensibles, reclamos, pagos). Inverso natural de auto_reply."
           ),
       }),
-      prompt: `Sos un experto en clasificación de mensajes entrantes para agentes de ventas/atención sobre CRM.
+      prompt: `Eres un experto en clasificación de mensajes entrantes para agentes de ventas/atención sobre CRM.
 
-El operador quiere crear UNA vertical (categoría de mensaje entrante) específica. Construila a partir de su pedido, alineada al agente ya configurado.
+El operador quiere crear UNA vertical (categoría de mensaje entrante) específica. Constrúyela a partir de su pedido, alineada al agente ya configurado.
 
 PEDIDO DEL OPERADOR:
 ${instruction}
@@ -128,11 +128,12 @@ CONTEXTO DEL AGENTE (para que la vertical hable en la misma voz):
 ${context || "(sin contexto previo del agente)"}${currentBlock}
 
 Reglas:
-- Generá UNA sola vertical que represente fielmente lo que pidió el operador.
-- Si te pasaron una VERTICAL ACTUAL, conservá su intención y solo aplicá el ajuste pedido.
+- Todo el texto en español que generes (especialmente el system_prompt) debe estar en español venezolano (tú/tienes, registro de negocio neutro), nunca argentino (vos/tenés).
+- Genera UNA sola vertical que represente fielmente lo que pidió el operador.
+- Si te pasaron una VERTICAL ACTUAL, conserva su intención y solo aplica el ajuste pedido.
 - Consultas comerciales o de información clara: auto_reply=true, requires_review=false.
 - Temas sensibles (reclamos, pagos, datos personales, soporte crítico): auto_reply=false, requires_review=true.
-- Si el pedido implica una ACCIÓN del agente (mover de etapa o guardar datos en el CRM; o buscar productos, consultar pedidos o vender por la tienda Shopify), incluí esa instrucción dentro del system_prompt usando los nombres EXACTOS (ver capacidades del agente arriba). Si no aplica, no la agregues.
+- Si el pedido implica una ACCIÓN del agente (mover de etapa o guardar datos en el CRM; o buscar productos, consultar pedidos o vender por la tienda Shopify), incluye esa instrucción dentro del system_prompt usando los nombres EXACTOS (ver capacidades del agente arriba). Si no aplica, no la agregues.
 - slug en snake_case. system_prompt en segunda persona dirigido al agente, sin el nombre literal del negocio.`,
     });
     await recordWebUsage({ component: "dashboard_verticales_generate", model: "claude-sonnet-4-6", usage });

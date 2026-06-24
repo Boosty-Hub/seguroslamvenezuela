@@ -56,7 +56,7 @@ export async function POST(request: Request) {
   // API no vive ahí) y hosts arbitrarios que terminen en .myshopify.com.
   if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(domain)) {
     return NextResponse.json(
-      { ok: false, error: "Usá el dominio .myshopify.com de la tienda (no el dominio propio)." },
+      { ok: false, error: "Usa el dominio .myshopify.com de la tienda (no el dominio propio)." },
       { status: 400 }
     );
   }

@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     text = inlineContent;
     format = "md";
   } else {
-    return NextResponse.json({ error: "subí archivo o pegá contenido" }, { status: 400 });
+    return NextResponse.json({ error: "sube un archivo o pega contenido" }, { status: 400 });
   }
 
   if (text.trim().length < 50)

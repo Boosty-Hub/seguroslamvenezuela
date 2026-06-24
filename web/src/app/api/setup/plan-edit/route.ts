@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const apiKey = await configValue("ANTHROPIC_API_KEY");
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "Configurá primero la API key de Anthropic." },
+      { ok: false, error: "Configura primero la API key de Anthropic." },
       { status: 400 }
     );
   }
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
           .string()
           .describe("Una frase corta explicando qué vas a hacer (para mostrarle al usuario)."),
       }),
-      prompt: `Sos un editor experto de system prompts. Estas son las secciones actuales, en orden:\n${numbered || "(todavía no hay secciones)"}\n\nInstrucción del usuario:\n${instruction}\n\nDecidí si modifica una sección existente o agrega una nueva, y dónde ubicarla.`,
+      prompt: `Eres un editor experto de system prompts. Estas son las secciones actuales, en orden:\n${numbered || "(todavía no hay secciones)"}\n\nInstrucción del usuario:\n${instruction}\n\nDecide si modifica una sección existente o agrega una nueva, y dónde ubicarla.`,
     });
     await recordWebUsage({ component: "dashboard_plan_edit", model: "claude-sonnet-4-6", usage });
     return NextResponse.json({ ok: true, ...object });

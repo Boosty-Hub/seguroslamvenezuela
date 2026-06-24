@@ -1,7 +1,7 @@
 "use client";
 
 // Reusable AI assistant that builds and refines an agent system prompt.
-// Used both in /setup (Creá tu agente) and /agent (edit later). It edits the
+// Used both in /setup (Crea tu agente) and /agent (edit later). It edits the
 // prompt passed via `value` and reports changes via `onChange`. When `value` is
 // empty it CREATES a base prompt (and, if `onIdentity` is given, suggests the
 // operator + label); when `value` already has content each message either edits
@@ -232,13 +232,13 @@ export function AgentPromptAssistant({
       <div className="flex items-center gap-2">
         <span className="text-base leading-none">✨</span>
         <h3 className="text-sm font-semibold text-violet-900">
-          Asistente: {isCreate ? "construí tu agente con IA" : "editá el prompt con IA"}
+          Asistente: {isCreate ? "construye tu agente con IA" : "edita el prompt con IA"}
         </h3>
       </div>
       <p className="text-xs text-violet-700">
         {isCreate
-          ? "Contanos sobre tu negocio y armamos la base del prompt (lo ves aparecer al lado)."
-          : "Pedile cambios o pegale info: detecto si editar una sección existente o crear una nueva, y la ubico donde corresponde — sin tocar el resto. Ej: «las sedes…», «hacé el tono más formal», «sumá la promo 2x1»."}
+          ? "Cuéntanos sobre tu negocio y armamos la base del prompt (lo ves aparecer al lado)."
+          : "Pídele cambios o pégale info: detecto si editar una sección existente o crear una nueva, y la ubico donde corresponde — sin tocar el resto. Ej: «las sedes…», «haz el tono más formal», «agrega la promo 2x1»."}
       </p>
 
       {aiMessages.length > 0 && (
@@ -268,7 +268,7 @@ export function AgentPromptAssistant({
         placeholder={
           isCreate
             ? "Ej: Atención al cliente de SUPERCINES, la cadena de cines. El agente se llama MUVITO, atiende por WhatsApp e Instagram, con tono alegre y cercano."
-            : "Ej: agregá nuestras redes (Instagram @supercines) y que ofrezca la promo 2x1 de los martes."
+            : "Ej: agrega nuestras redes (Instagram @supercines) y que ofrezca la promo 2x1 de los martes."
         }
         className={inputCls + " leading-relaxed bg-white/70"}
         disabled={aiLoading}

@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const autoMode = form.get("auto_reply_mode")?.toString() ?? "auto";
 
   // NOTA: los límites de respuesta por lead (cooldown / tope) se configuran en
-  // /agent → tab Filtros (POST /api/response-limits). NO se tocan acá para no
+  // /agent → tab Filtros (POST /api/response-limits). NO se tocan aquí para no
   // pisarlos cuando se guarda la config de publicación.
   const update: Record<string, unknown> = {
     response_custom_field_id: fieldId ? Number(fieldId) : null,

@@ -18,7 +18,7 @@ export const runtime = "nodejs";
 const MASTER_DESCRIPTION =
   "Memoria global del operador: voz (reglas, chats reales, transcripciones, respuestas ejemplares), KB destilada y aprendizajes destilados por el job de Dreams. " +
   "Estructura del filesystem: /voice/rule/<sample_id>_<chunk>.md, /voice/chat_export/<id>_<chunk>.md, /voice/transcript/<id>_<chunk>.md, /voice/example_response/<id>_<chunk>.md, /kb/<doc>/<chunk>.md, /dreams/<date>_<topic>.md. " +
-  "ANTES de redactar cualquier respuesta a un lead: grep por palabras clave del mensaje del lead en /voice/ para reglas y ejemplos aplicables; consultá /kb/ para info factual; mirá /dreams/ para aprendizajes recientes que tienen prioridad sobre la voz base.";
+  "ANTES de redactar cualquier respuesta a un lead: grep por palabras clave del mensaje del lead en /voice/ para reglas y ejemplos aplicables; consulta /kb/ para info factual; mira /dreams/ para aprendizajes recientes que tienen prioridad sobre la voz base.";
 
 const LEADS_DESCRIPTION =
   "Memoria persistente por lead. Estructura: /<lead_id>/conversation.md (timeline de mensajes inbound/outbound), /<lead_id>/learnings.md (observaciones del agente: objeciones recurrentes, contexto, preferencias, vertical asignada). " +
@@ -43,7 +43,7 @@ export async function POST() {
 
   if (!cfg.ANTHROPIC_API_KEY) {
     return NextResponse.json(
-      { ok: false, error: "Falta ANTHROPIC_API_KEY — completá el paso de credenciales primero" },
+      { ok: false, error: "Falta ANTHROPIC_API_KEY — completa el paso de credenciales primero" },
       { status: 400 }
     );
   }

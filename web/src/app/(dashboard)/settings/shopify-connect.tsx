@@ -28,15 +28,15 @@ export function ShopifyConnect({
 
   async function connect() {
     if (!dom.trim()) {
-      setError("Completá el dominio de la tienda.");
+      setError("Completa el dominio de la tienda.");
       return;
     }
     if (mode === "credentials" && (!clientId.trim() || !clientSecret.trim())) {
-      setError("Completá el Client ID y el Client Secret.");
+      setError("Completa el Client ID y el Client Secret.");
       return;
     }
     if (mode === "legacy" && !token.trim()) {
-      setError("Completá el token shpat_.");
+      setError("Completa el token shpat_.");
       return;
     }
     setBusy(true);
@@ -92,8 +92,8 @@ export function ShopifyConnect({
         <div className="space-y-1">
           <h2 className="text-sm font-semibold tracking-tight text-neutral-900">🛍️ Shopify</h2>
           <p className="text-xs text-neutral-500">
-            Conectá la tienda para que el agente pueda buscar productos, ver pedidos y crear links
-            de pago. Después activás cada capacidad en{" "}
+            Conecta la tienda para que el agente pueda buscar productos, ver pedidos y crear links
+            de pago. Después activas cada capacidad en{" "}
             <a href="/agent?tab=acciones" className="font-medium text-neutral-700 underline">
               Agente → Acciones
             </a>
@@ -144,7 +144,7 @@ export function ShopifyConnect({
             </summary>
             <ol className="mt-2 list-decimal space-y-1 pl-4">
               <li>
-                Entrá al{" "}
+                Entra al{" "}
                 <a
                   href="https://dev.shopify.com/dashboard"
                   target="_blank"
@@ -153,19 +153,19 @@ export function ShopifyConnect({
                 >
                   Dev Dashboard de Shopify
                 </a>{" "}
-                y creá una app para tu tienda (tienda y app deben ser de la misma organización).
+                y crea una app para tu tienda (tienda y app deben ser de la misma organización).
               </li>
               <li>
-                Dale permisos de la Admin API: <span className="font-mono">read_products</span>,{" "}
+                Asigna permisos de la Admin API: <span className="font-mono">read_products</span>,{" "}
                 <span className="font-mono">read_inventory</span>,{" "}
                 <span className="font-mono">read_orders</span> y{" "}
                 <span className="font-mono">write_draft_orders</span> (para los links de pago).
               </li>
-              <li>Instalá la app en la tienda.</li>
+              <li>Instala la app en la tienda.</li>
               <li>
-                En la config de la app copiá el <strong>Client ID</strong> y el{" "}
+                En la config de la app copia el <strong>Client ID</strong> y el{" "}
                 <strong>Client Secret</strong> (empieza con <span className="font-mono">shpss_</span>
-                ) y pegalos acá junto con el dominio <span className="font-mono">.myshopify.com</span>.
+                ) y pégalos aquí junto con el dominio <span className="font-mono">.myshopify.com</span>.
                 El sistema renueva el token de acceso automáticamente cada 24 h.
               </li>
             </ol>
@@ -174,7 +174,7 @@ export function ShopifyConnect({
           <p className="text-[11px] text-neutral-500">
             {mode === "legacy"
               ? "Estás usando el modo clásico (token shpat_ de una custom app vieja)."
-              : "¿Tenés una custom app vieja con token shpat_?"}{" "}
+              : "¿Tienes una custom app vieja con token shpat_?"}{" "}
             <button
               type="button"
               onClick={() => setMode(mode === "legacy" ? "credentials" : "legacy")}

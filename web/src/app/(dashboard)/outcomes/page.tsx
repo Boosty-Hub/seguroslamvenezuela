@@ -152,7 +152,7 @@ export default async function OutcomesPage() {
         {(graders ?? []).length === 0 ? (
           <EmptyState
             title="Sin graders configurados"
-            description="Agregá un grader para empezar a evaluar la calidad de las respuestas."
+            description="Agrega un grader para empezar a evaluar la calidad de las respuestas."
           />
         ) : (
           <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">

@@ -234,7 +234,7 @@ export default function ContentTabs({
             }
           >
             <p className="text-xs text-neutral-500">
-              Las promos activas se inyectan automáticamente en el contexto del agente. Podés activar/desactivar
+              Las promos activas se inyectan automáticamente en el contexto del agente. Puedes activar/desactivar
               cada una sin borrarla, y fijar fechas o días de la semana para que apliquen solo cuando corresponde.
             </p>
           </SectionCard>
@@ -243,7 +243,7 @@ export default function ContentTabs({
             <EmptyState
               icon={<Sparkles size={24} />}
               title="Sin promos ni eventos"
-              description="Creá la primera promo para que el agente empiece a mencionarla en sus respuestas."
+              description="Crea la primera promo para que el agente empiece a mencionarla en sus respuestas."
               action={
                 <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={openCreate}>
                   Crear primera promo

@@ -6,7 +6,7 @@ import { Button, inputCls, textareaCls } from "@/components/ui";
 import { KommoFieldSelect } from "@/app/(dashboard)/settings/kommo-field-select";
 
 const DEFAULT_RULES =
-  'Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invitá al DM ("te pasamos el detalle por DM 💛"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradecé breve.';
+  'Respuesta CORTA (máximo 200 caracteres), sin saludos largos ni presentaciones: directo al grano. NO des precios, montos ni promociones con números en público — para eso invita al DM ("te pasamos el detalle por DM 💛"). Tono cercano, máximo 1 emoji. Si el comentario es solo elogio o emojis, agradece breve.';
 
 export type CommentsConfig = {
   comment_reply_enabled: boolean;
@@ -25,7 +25,7 @@ export function CommentsPanel({ initial }: { initial: CommentsConfig }) {
   const [rules, setRules] = useState<string>(initial.comment_reply_rules ?? DEFAULT_RULES);
   const [instructions, setInstructions] = useState<string>(
     initial.comment_instructions ??
-      'El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconocé el origen con naturalidad (ej: "vi tu comentario 😊"), andá directo al grano.'
+      'El mensaje vino de un comentario público en una publicación de Instagram. Tu respuesta sale por DM: reconoce el origen con naturalidad (ej: "vi tu comentario 😊"), ve directo al grano.'
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,7 +191,7 @@ export function CommentsPanel({ initial }: { initial: CommentsConfig }) {
           className={textareaCls}
         />
         <p className="text-xs text-neutral-400">
-          Acá el agente puede dar precios y detalles (es privado). Estas instrucciones le dicen
+          Aquí el agente puede dar precios y detalles (es privado). Estas instrucciones le dicen
           cómo reconocer el origen y el tono.
         </p>
         <Button

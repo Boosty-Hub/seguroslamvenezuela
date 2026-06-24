@@ -70,7 +70,7 @@ export function BackfillBanner() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-amber-900">
           <span className="font-medium">Hay consumo histórico sin importar.</span>
-          {" "}Importá las sesiones pasadas para ver el costo real desde el primer día.
+          {" "}Importa las sesiones pasadas para ver el costo real desde el primer día.
         </div>
         <button
           onClick={run}

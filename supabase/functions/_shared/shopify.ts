@@ -99,7 +99,7 @@ export async function shopifyGraphQL<T = unknown>(
   return (await res.json()) as GraphQLResult<T>;
 }
 
-// Valida la conexión (lo usa el web vía su propio fetch; acá para el edge si hace falta).
+// Valida la conexión (lo usa el web vía su propio fetch; aquí para el edge si hace falta).
 export async function shopifyShopName(creds: ShopifyCreds): Promise<string> {
   const r = await shopifyGraphQL<{ shop: { name: string } }>(creds, `{ shop { name } }`);
   if (r.errors?.length) throw new Error(r.errors[0].message);

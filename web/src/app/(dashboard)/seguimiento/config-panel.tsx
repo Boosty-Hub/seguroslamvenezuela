@@ -166,7 +166,7 @@ export function ConfigPanel({ config }: { config: Config }) {
         </label>
 
         {/* Horario laboral — se configura en Agente (single source of truth);
-            acá solo se muestra el resumen para no duplicar editores. */}
+            aquí solo se muestra el resumen para no duplicar editores. */}
         <div className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-600">
           🕐 Los seguimientos se envían dentro del{" "}
           <span className="font-medium">horario laboral</span> configurado en{" "}

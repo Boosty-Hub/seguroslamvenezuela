@@ -45,7 +45,7 @@ export function AgentOffConfig({
       summary={fieldName ? `Activo · campo "${fieldName}"` : "Desactivado"}
       description={
         <>
-          Elegí un campo de Kommo del lead (recomendado: tipo <span className="font-medium">casilla
+          Elige un campo de Kommo del lead (recomendado: tipo <span className="font-medium">casilla
           sí/no</span>). Cuando una asesora lo encienda en la ficha de un lead, el agente{" "}
           <span className="font-medium text-neutral-700">deja de responderle</span> a ese lead — sin
           tocar nada técnico, directo desde la ficha en Kommo.

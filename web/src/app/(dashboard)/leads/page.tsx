@@ -223,7 +223,7 @@ export default async function LeadsPage({
       {rows.length === 0 ? (
         <EmptyState
           title={hasActiveFilters ? "Ningún lead coincide con los filtros." : "Sin leads todavía."}
-          description={hasActiveFilters ? "Probá ajustar o limpiar los filtros." : undefined}
+          description={hasActiveFilters ? "Prueba ajustar o limpiar los filtros." : undefined}
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">

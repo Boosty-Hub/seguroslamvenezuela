@@ -5,7 +5,7 @@
 // día apagado = cerrado). Lo consumen:
 //   - generate-response: inyecta en_horario_laboral al contexto del agente
 //   - follow_up_due_leads (SQL): ventana horaria de los seguimientos
-// Se edita acá (Agente → Filtros) y Seguimiento muestra el resumen.
+// Se edita aquí (Agente → Filtros) y Seguimiento muestra el resumen.
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -147,7 +147,7 @@ export function BusinessHoursPanel({ initial }: { initial: BusinessHours | null 
       business_hours[String(d.value)] = r;
     }
     if (Object.keys(business_hours).length === 0) {
-      setError("Activá al menos un día de atención.");
+      setError("Activa al menos un día de atención.");
       return;
     }
 

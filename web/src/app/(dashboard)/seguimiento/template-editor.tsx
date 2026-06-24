@@ -93,7 +93,7 @@ function coerceVariables(raw: unknown): Variable[] {
 // Modal is imported from @/components/ui
 
 // Picker del campo de Kommo POR NOMBRE (campos vivos) con creación INLINE: si el
-// campo no existe, lo creás acá mismo (nombre + tipo) y queda matcheado al instante.
+// campo no existe, lo creas aquí mismo (nombre + tipo) y queda matcheado al instante.
 function FieldPicker({
   value,
   valueName,
@@ -127,7 +127,7 @@ function FieldPicker({
 
   async function create() {
     const name = newName.trim();
-    if (!name) return setErr("Poné un nombre para el campo.");
+    if (!name) return setErr("Pon un nombre para el campo.");
     setBusy(true);
     setErr(null);
     const { field, error } = await onCreateField(name, newType);
@@ -140,7 +140,7 @@ function FieldPicker({
   if (!configured) {
     return (
       <p className="w-56 text-[11px] text-neutral-500">
-        Conectá Kommo en el{" "}
+        Conecta Kommo en el{" "}
         <a href="/setup" className="font-medium text-neutral-700 underline">
           setup
         </a>{" "}
@@ -592,7 +592,7 @@ function NewTemplateForm({
 
   async function generate() {
     if (!aiPrompt.trim()) {
-      setGenError("Describí qué plantilla querés crear.");
+      setGenError("Describe qué plantilla quieres crear.");
       return;
     }
     setGenBusy(true);
@@ -680,10 +680,10 @@ function NewTemplateForm({
       <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-4">
         <p className="text-xs font-medium text-neutral-700">✨ Crear con IA</p>
         <p className="text-xs text-neutral-500">
-          Describí qué plantilla de seguimiento querés y la IA completa el cuerpo, las
+          Describe qué plantilla de seguimiento quieres y la IA completa el cuerpo, las
           variables, el nombre y la demora del paso. Las variables se{" "}
           <span className="font-medium text-neutral-700">matchean solas</span> con tus campos de
-          Kommo; lo que falte lo asignás o lo creás al vuelo abajo.
+          Kommo; lo que falte lo asignas o lo creas al vuelo abajo.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -876,8 +876,8 @@ export function TemplateEditor({ templates }: { templates: Template[] }) {
             Plantillas de WhatsApp
           </h2>
           <p className="text-xs text-neutral-500">
-            Cada variable se asigna directo a un campo de Kommo (lo elegís por nombre o lo creás
-            acá mismo). Para enviarse, la plantilla necesita su salesbot_id y todas sus variables
+            Cada variable se asigna directo a un campo de Kommo (lo eliges por nombre o lo creas
+            aquí mismo). Para enviarse, la plantilla necesita su salesbot_id y todas sus variables
             con un campo asignado.
           </p>
         </div>
@@ -890,7 +890,7 @@ export function TemplateEditor({ templates }: { templates: Template[] }) {
 
       {fieldsError && (
         <p className="text-xs text-amber-700">
-          No se pudieron traer los campos de Kommo: {fieldsError}. Podés escribir la plantilla y
+          No se pudieron traer los campos de Kommo: {fieldsError}. Puedes escribir la plantilla y
           asignar los campos más tarde.
         </p>
       )}
@@ -942,7 +942,7 @@ export function TemplateEditor({ templates }: { templates: Template[] }) {
       {templates.length === 0 && !creating && (
         <EmptyState
           title="Sin plantillas"
-          description="Creá una plantilla para empezar la secuencia de seguimiento."
+          description="Crea una plantilla para empezar la secuencia de seguimiento."
         />
       )}
     </div>

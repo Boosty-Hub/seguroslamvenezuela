@@ -1,5 +1,5 @@
 // server-only: valida la conexión a Shopify y normaliza el dominio. El agente usa
-// Shopify vía las tools internas (edge); acá solo validamos al conectar desde el
+// Shopify vía las tools internas (edge); aquí solo validamos al conectar desde el
 // dashboard. Conexión single-tenant. Dos modos de auth:
 //   - Apps nuevas (Dev Dashboard, desde 2026): client credentials grant —
 //     SHOPIFY_CLIENT_ID + SHOPIFY_CLIENT_SECRET se canjean por un access token

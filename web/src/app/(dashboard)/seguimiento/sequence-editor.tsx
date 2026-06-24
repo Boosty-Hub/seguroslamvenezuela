@@ -103,7 +103,7 @@ export function SequenceEditor({
       </div>
 
       {steps.length === 0 && (
-        <p className="text-sm text-neutral-500">Sin pasos. Agregá al menos uno para activar el seguimiento.</p>
+        <p className="text-sm text-neutral-500">Sin pasos. Agrega al menos uno para activar el seguimiento.</p>
       )}
 
       {steps.length > 0 && (

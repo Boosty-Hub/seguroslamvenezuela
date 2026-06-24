@@ -91,7 +91,7 @@ export function KommoFieldPicker({
   if (!configured) {
     return (
       <p className="text-sm text-neutral-500">
-        Conectá Kommo en el{" "}
+        Conecta Kommo en el{" "}
         <a href="/setup" className="font-medium text-neutral-700 underline">
           setup
         </a>{" "}
@@ -114,7 +114,7 @@ export function KommoFieldPicker({
       className={`${base} ${className ?? ""}`}
     >
       {allowNone && <option value="">{noneLabel}</option>}
-      {!allowNone && value == null && <option value="">— Elegí un campo —</option>}
+      {!allowNone && value == null && <option value="">— Elige un campo —</option>}
       {!known && value != null && <option value={value}>#{value} (campo no encontrado)</option>}
       {fields.map((f) => (
         <option key={`${f.entity}-${f.id}`} value={f.id}>

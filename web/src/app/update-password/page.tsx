@@ -18,7 +18,7 @@ export default function UpdatePasswordPage() {
     e.preventDefault();
     setError(null);
     if (password.length < 8) return setError("Mínimo 8 caracteres");
-    if (password !== confirm) return setError("Las passwords no coinciden");
+    if (password !== confirm) return setError("Las contraseñas no coinciden");
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
@@ -38,10 +38,10 @@ export default function UpdatePasswordPage() {
       >
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">
-            Setear password
+            Configurar contraseña
           </h1>
           <p className="text-sm text-neutral-600">
-            Elegí una password para tu cuenta.
+            Elige una contraseña para tu cuenta.
           </p>
         </div>
         <div className="space-y-2">
@@ -49,7 +49,7 @@ export default function UpdatePasswordPage() {
             className="text-sm font-medium text-neutral-700"
             htmlFor="password"
           >
-            Password
+            Contraseña
           </label>
           <input
             id="password"

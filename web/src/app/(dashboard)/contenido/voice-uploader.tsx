@@ -172,7 +172,7 @@ export default function VoiceUploader() {
 
       {info.allowPaste && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-700">… o pegá contenido</label>
+          <label className="text-sm font-medium text-neutral-700">… o pega contenido</label>
           <textarea
             rows={6}
             value={content}

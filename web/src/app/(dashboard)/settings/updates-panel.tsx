@@ -150,7 +150,7 @@ export function UpdatesPanel({ autoUpdateEnabled = true }: { autoUpdateEnabled?:
       ) : needsToken ? (
         <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm text-amber-800">
-            No hay un token de Supabase guardado. Pegá tu Personal Access Token (<span className="font-mono">sbp_…</span>)
+            No hay un token de Supabase guardado. Pega tu Personal Access Token (<span className="font-mono">sbp_…</span>)
             para poder actualizar.
           </p>
           <input

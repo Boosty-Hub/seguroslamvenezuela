@@ -67,7 +67,7 @@ export function InitBanner() {
             href="/first-run"
             className="font-medium underline underline-offset-2"
           >
-            Completá la configuración inicial
+            Completa la configuración inicial
           </a>
           .
         </p>

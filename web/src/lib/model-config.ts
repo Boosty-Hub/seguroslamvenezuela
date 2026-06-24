@@ -1,7 +1,7 @@
 // Modelos por componente del pipeline — editable desde /consumo.
 // Cada key vive en runtime_config (DB-first); el default es el modelo con el
 // que se diseñó cada componente. Los precios viven en lib/ai-pricing — agregar
-// un modelo acá requiere también su fila de pricing.
+// un modelo aquí requiere también su fila de pricing.
 
 export const ALLOWED_MODELS = ["claude-haiku-4-5", "claude-sonnet-4-6", "claude-opus-4-8"] as const;
 

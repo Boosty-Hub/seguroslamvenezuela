@@ -76,7 +76,7 @@ export default async function SeguimientoPage() {
   return (
     <PageShell
       title="Seguimiento automático"
-      description="Configurá las plantillas de WhatsApp, la secuencia de pasos y los horarios de envío."
+      description="Configura las plantillas de WhatsApp, la secuencia de pasos y los horarios de envío."
     >
       <Guide />
       <ConfigPanel config={config} />

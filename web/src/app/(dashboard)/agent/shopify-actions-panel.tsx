@@ -55,7 +55,7 @@ export function ShopifyActionsPanel({
     if (enabled && missingRecommended.length > 0) {
       return (
         <p className="mt-1 rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] text-amber-700">
-          ⚠ Recomendado: agregá <span className="font-mono">{missingRecommended.join(", ")}</span>{" "}
+          ⚠ Recomendado: agrega <span className="font-mono">{missingRecommended.join(", ")}</span>{" "}
           para datos más completos (ej. stock por talla).
         </p>
       );
@@ -118,7 +118,7 @@ export function ShopifyActionsPanel({
             <p className="text-xs text-neutral-500">
               Con esto el agente puede consultar el catálogo y vender desde el chat: buscar
               productos por nombre/categoría/talla, ver pedidos y armar links de pago. Solo actúa
-              cuando se lo indicás.
+              cuando se lo indicas.
             </p>
           </div>
           <Switch checked={flags.enabled} disabled={!connected || busy} onChange={toggleMaster} />
@@ -126,11 +126,11 @@ export function ShopifyActionsPanel({
 
         {!connected ? (
           <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            ⚠️ Shopify no está conectado. Conectá la tienda en{" "}
+            ⚠️ Shopify no está conectado. Conecta la tienda en{" "}
             <a href="/settings" className="font-medium underline">
               Configuración
             </a>{" "}
-            (pegás el dominio y el token) y después activás las capacidades acá.
+            (pegas el dominio y el token) y después activas las capacidades aquí.
           </p>
         ) : (
           !flags.enabled && (
@@ -153,7 +153,7 @@ export function ShopifyActionsPanel({
           <CapabilityCard
             icon="🔎"
             title="Buscar productos y stock"
-            description="Responde «¿tenés zapatos de niña talla 30? ¿cuánto salen?» con precio, variantes y disponibilidad reales. Incluye «los más vendidos» y ver categorías."
+            description="Responde «¿tienes zapatos de niña talla 30? ¿cuánto cuestan?» con precio, variantes y disponibilidad reales. Incluye «los más vendidos» y ver categorías."
             checked={flags.search}
             disabled={capsDisabled}
             onChange={(v) => toggleCap("search", v)}
@@ -185,17 +185,17 @@ export function ShopifyActionsPanel({
       </div>
 
       <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-4">
-        <p className="text-xs font-medium text-neutral-700">✨ Cómo le decís cuándo usarlo</p>
+        <p className="text-xs font-medium text-neutral-700">✨ Cómo le dices cuándo usarlo</p>
         <p className="text-xs text-neutral-600">
-          Igual que las acciones de CRM: lo escribís en la voz del agente o en una vertical.
+          Igual que las acciones de CRM: lo escribes en la voz del agente o en una vertical.
           Ejemplos:
         </p>
         <div className="space-y-1.5 pt-1">
           {[
-            "Si preguntan por un producto, buscalo en la tienda y pasá precio, tallas disponibles y el link.",
-            "Si piden «lo más vendido», traé los más vendidos.",
-            "Si quieren comprar, generales el link de pago del producto y la talla que eligieron.",
-            "Si preguntan por su pedido, consultá el estado por su número o email.",
+            "Si preguntan por un producto, búscalo en la tienda y pasa precio, tallas disponibles y el link.",
+            "Si piden «lo más vendido», trae los más vendidos.",
+            "Si quieren comprar, genérales el link de pago del producto y la talla que eligieron.",
+            "Si preguntan por su pedido, consulta el estado por su número o email.",
           ].map((ej) => (
             <p
               key={ej}

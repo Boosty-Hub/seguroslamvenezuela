@@ -464,8 +464,8 @@ ${verticalList}
 Reglas:
 - Si el mensaje es ambiguo o no encaja claramente en ninguna vertical específica, usa "general". El agente le hará una pregunta clarificadora. NO marques requires_human_review por ser ambiguo.
 - Solo marca requires_human_review=true cuando: (a) sea hate/sarcasmo/troll/insulto, (b) sea una queja seria que requiera intervención humana, o (c) tu confidence sea < 0.4.
-- media_summary: si hay un adjunto (imagen/documento), describí en 1-3 frases QUÉ muestra y transcribí el texto/datos visibles relevantes (precios, números, nombres). Si no hay adjunto, devolvé "".
-- Usá la descripción de cada vertical (arriba) para decidir el slug correcto. No inventes verticales que no estén en la lista.
+- media_summary: si hay un adjunto (imagen/documento), describe en 1-3 frases QUÉ muestra y transcribe el texto/datos visibles relevantes (precios, números, nombres). Si no hay adjunto, devuelve "".
+- Usa la descripción de cada vertical (arriba) para decidir el slug correcto. No inventes verticales que no estén en la lista.
 - intent: info (consulta abierta), purchase (intención de compra clara), support (problema con algo ya comprado), feedback, spam, other.
 - urgency: 1 (casual) a 5 (urgente — cliente molesto, urgencia explícita).
 - toxicity: 0 (neutro/positivo) a 1 (insulto directo).

@@ -5,7 +5,7 @@
 //   - el PERFIL DE TOKENS por evento (medido en este deployment — cuántos
 //     tokens de input/output/caché/runtime usa cada componente), y
 //   - el PRECIO por token, que depende del MODELO asignado a cada componente.
-// Así, cambiar el modelo (acá o en el panel de arriba) recalcula al instante.
+// Así, cambiar el modelo (aquí o en el panel de arriba) recalcula al instante.
 // Cambiar de modelo NO cambia cuántos tokens usa el agente — solo su precio.
 
 import { useState } from "react";
@@ -65,7 +65,7 @@ function usd(n: number, digits = 2): string {
 export function CostCalculator({ data }: { data: CalculatorData }) {
   const [msgs, setMsgs] = useState(100);
   // Inicializa con los modelos ASIGNADOS (el panel de arriba); el operador
-  // puede simular otros acá sin guardar nada.
+  // puede simular otros aquí sin guardar nada.
   const [models, setModels] = useState(data.models);
 
   const sessions = msgs * data.sessionsPerMsg;

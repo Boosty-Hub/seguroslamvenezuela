@@ -11,7 +11,7 @@ import { inputCls, labelCls } from "@/components/ui/styles";
 function validate(email: string, password: string, confirm: string) {
   const errors: Record<string, string> = {};
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = "Ingresá un email válido.";
+    errors.email = "Ingresa un email válido.";
   }
   if (password.length < 8) {
     errors.password = "La contraseña debe tener al menos 8 caracteres.";
@@ -76,8 +76,8 @@ export function CreateUser({ onComplete }: { onComplete: () => void }) {
       if (authError) {
         setServerError(
           res.status === 409
-            ? "Ya existe un usuario con otra contraseña. Ingresá la contraseña correcta para continuar."
-            : `Usuario creado, pero no pudimos iniciar sesión: ${authError.message}. Reintentá.`
+            ? "Ya existe un usuario con otra contraseña. Ingresa la contraseña correcta para continuar."
+            : `Usuario creado, pero no pudimos iniciar sesión: ${authError.message}. Reinténtalo.`
         );
         return;
       }
@@ -96,11 +96,11 @@ export function CreateUser({ onComplete }: { onComplete: () => void }) {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-neutral-900">
-          Creá tu usuario
+          Crea tu usuario
         </h2>
         <p className="mt-1 text-sm text-neutral-500">
           Con este email y contraseña vas a entrar al panel. Es el único acceso
-          — guardalo bien.
+          — guárdalo bien.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export function CreateUser({ onComplete }: { onComplete: () => void }) {
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            placeholder="Repetí la contraseña"
+            placeholder="Repite la contraseña"
             className={inputCls}
             disabled={running}
             autoComplete="new-password"

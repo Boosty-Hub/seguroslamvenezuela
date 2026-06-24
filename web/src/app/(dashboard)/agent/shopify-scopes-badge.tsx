@@ -103,7 +103,7 @@ export function ShopifyScopesSummary({ state }: { state: ScopesState }) {
             );
           })}
           <p className="pt-1 text-[10px] text-neutral-400">
-            Si falta alguno, agregalo en los scopes de tu app de Shopify y reinstalala — esa acción
+            Si falta alguno, agrégalo en los scopes de tu app de Shopify y reinstálala — esa acción
             del agente fallaría sin el permiso.
           </p>
         </div>

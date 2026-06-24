@@ -83,7 +83,7 @@ export function BillingFlow({ points }: { points: BillingPoint[] }) {
               {p.note && <span className="text-amber-700">{p.note}</span>}
             </div>
             {p.measuredWith && (
-              <p className="mt-1 text-[11px] text-neutral-400">⚠ {p.measuredWith} — el badge muestra el modelo configurado de acá en más</p>
+              <p className="mt-1 text-[11px] text-neutral-400">⚠ {p.measuredWith} — el badge muestra el modelo configurado de aquí en más</p>
             )}
             {p.breakdown && p.breakdown.some((b) => b.usd > 0) && (
               <div className="mt-2 space-y-1 rounded-lg bg-neutral-50 p-2.5">

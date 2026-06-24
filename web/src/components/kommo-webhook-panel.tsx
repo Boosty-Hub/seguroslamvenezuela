@@ -7,11 +7,11 @@
 import { useState } from "react";
 
 const STEPS = [
-  "En Kommo, andá a Configuración → Integraciones.",
-  "Buscá «Webhooks» y abrilo → «Añadir webhook».",
-  "Pegá la URL de arriba en el campo de la URL del webhook.",
-  "Tildá los eventos: «Mensaje entrante» (chat), «Lead añadido» y «Lead modificado».",
-  "Guardá. Listo: los mensajes de tus leads ya llegan a tu agente.",
+  "En Kommo, ve a Configuración → Integraciones.",
+  "Busca «Webhooks» y ábrelo → «Añadir webhook».",
+  "Pega la URL de arriba en el campo de la URL del webhook.",
+  "Marca los eventos: «Mensaje entrante» (chat), «Lead añadido» y «Lead modificado».",
+  "Guarda. Listo: los mensajes de tus leads ya llegan a tu agente.",
 ];
 
 export function KommoWebhookPanel() {
@@ -34,11 +34,11 @@ export function KommoWebhookPanel() {
     <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm space-y-4 text-sm">
       <div>
         <h3 className="text-sm font-semibold tracking-tight text-neutral-900">
-          Conectá el webhook de Kommo
+          Conecta el webhook de Kommo
         </h3>
         <p className="mt-1 text-xs text-neutral-500">
           Para que los mensajes de tus leads lleguen al agente, Kommo tiene que
-          avisarle a esta dirección cada vez que pasa algo. Pegala como webhook
+          avisarle a esta dirección cada vez que pasa algo. Pégala como webhook
           en Kommo (una sola vez).
         </p>
       </div>
@@ -47,7 +47,7 @@ export function KommoWebhookPanel() {
         <p className="text-xs font-medium text-neutral-600">URL del webhook</p>
         <div className="flex items-start justify-between gap-2">
           <code className="break-all text-xs text-neutral-900">
-            {url || "Configurá Supabase primero (paso 1)."}
+            {url || "Configura Supabase primero (paso 1)."}
           </code>
           <button
             type="button"
@@ -65,7 +65,7 @@ export function KommoWebhookPanel() {
             rel="noopener noreferrer"
             className="inline-block text-xs text-violet-600 underline"
           >
-            Probar (abre en otra pestaña — debe decir «kommo-webhook OK»)
+            Prueba (abre en otra pestaña — debe decir «kommo-webhook OK»)
           </a>
         )}
       </div>

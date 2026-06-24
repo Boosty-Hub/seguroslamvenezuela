@@ -141,7 +141,7 @@ export default async function DreamsPage({ searchParams }: { searchParams: Searc
       {listError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <p className="font-semibold">No pudimos cargar los aprendizajes.</p>
-          <p className="mt-0.5">Reintentá en unos segundos.{" "}
+          <p className="mt-0.5">Reinténtalo en unos segundos.{" "}
             <a href="/dreams" className="font-medium underline hover:text-red-800">
               Actualizar
             </a>

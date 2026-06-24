@@ -79,7 +79,7 @@ export function AgentForm({
       <div className="space-y-2">
         <AgentPromptAssistant value={systemPrompt} onChange={setSystemPrompt} />
         <p className="text-xs text-neutral-500">
-          Los cambios se aplican en el prompt de abajo. Acordate de{" "}
+          Los cambios se aplican en el prompt de abajo. Recuerda{" "}
           <strong>Guardar y sincronizar</strong> para subirlos a Anthropic.
         </p>
       </div>
@@ -90,10 +90,10 @@ export function AgentForm({
           System prompt — voz e identidad
         </label>
         <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
-          Acá va SOLO la voz, identidad y reglas de negocio del operador. La
+          Aquí va SOLO la voz, identidad y reglas de negocio del operador. La
           maquinaria técnica (leer la memoria, el formato de salida, el uso de
           la KB, las prioridades y la seguridad anti-abuso) la agrega el sistema
-          automáticamente por detrás — no hace falta escribirla acá, y así no se
+          automáticamente por detrás — no hace falta escribirla aquí, y así no se
           puede romper sin querer.
         </p>
         <textarea
@@ -101,7 +101,7 @@ export function AgentForm({
           rows={24}
           value={systemPrompt}
           onChange={(e) => setSystemPrompt(e.target.value)}
-          placeholder="La voz e identidad del operador. Podés usar los placeholders {{OPERATOR_NAME}}, {{MASTER_PATH}}, {{LEADS_PATH}}, {{MEMORY_STORE_MASTER}}, {{MEMORY_STORE_LEADS}} — se sustituyen al sincronizar."
+          placeholder="La voz e identidad del operador. Puedes usar los placeholders {{OPERATOR_NAME}}, {{MASTER_PATH}}, {{LEADS_PATH}}, {{MEMORY_STORE_MASTER}}, {{MEMORY_STORE_LEADS}} — se sustituyen al sincronizar."
           className={inputCls + " font-mono leading-relaxed"}
         />
         <p className="text-xs text-neutral-500">

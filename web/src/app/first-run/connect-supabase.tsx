@@ -23,23 +23,23 @@ SUPABASE_SERVICE_ROLE_KEY=`;
 // Short, non-technical steps per host. Kept to the exact labels each UI shows.
 const HOST_STEPS: Record<Platform, string[]> = {
   netlify: [
-    "Abrí tu sitio en netlify.com",
-    "Entrá a Project configuration → Environment variables",
-    "Tocá Add a variable → Import from a .env file",
-    "Pegá el bloque de acá abajo, completá los 3 valores y guardá",
+    "Abre tu sitio en netlify.com",
+    "Entra a Project configuration → Environment variables",
+    "Toca Add a variable → Import from a .env file",
+    "Pega el bloque de aquí abajo, completa los 3 valores y guarda",
     "Por último: Deploys → Trigger deploy → Clear cache and deploy site",
   ],
   vercel: [
-    "Abrí tu proyecto en vercel.com",
-    "Entrá a Settings → Environment Variables",
-    "Pegá las 3 variables del bloque de abajo (entorno Production)",
+    "Abre tu proyecto en vercel.com",
+    "Entra a Settings → Environment Variables",
+    "Pega las 3 variables del bloque de abajo (entorno Production)",
     "Por último: Deployments → Redeploy",
   ],
   other: [
-    "Abrí el panel de tu hosting",
-    "Buscá la sección Environment Variables (entorno de producción)",
-    "Agregá las 3 variables del bloque de abajo",
-    "Guardá y volvé a desplegar la app",
+    "Abre el panel de tu hosting",
+    "Busca la sección Environment Variables (entorno de producción)",
+    "Agrega las 3 variables del bloque de abajo",
+    "Guarda y vuelve a desplegar la app",
   ],
 };
 
@@ -99,11 +99,11 @@ export function ConnectSupabase({ onContinue }: { onContinue: () => void }) {
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-neutral-900">
-          Conectá tu base de datos
+          Conecta tu base de datos
         </h2>
         <p className="mt-1 text-sm text-neutral-500">
-          Pegá 3 datos de tu proyecto Supabase en {platformName[platform]} y
-          volvé a desplegar. Es la única vez que vas a tocar algo fuera de esta
+          Pega 3 datos de tu proyecto Supabase en {platformName[platform]} y
+          vuelve a desplegar. Es la única vez que vas a tocar algo fuera de esta
           pantalla.
         </p>
       </div>
@@ -144,7 +144,7 @@ export function ConnectSupabase({ onContinue }: { onContinue: () => void }) {
       <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
         <div className="flex items-center justify-between">
           <p className="text-xs font-medium text-neutral-600">
-            Pegá esto y completá los valores
+            Pega esto y completa los valores
           </p>
           <Button
             type="button"
@@ -165,9 +165,9 @@ export function ConnectSupabase({ onContinue }: { onContinue: () => void }) {
         </p>
         <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           <strong>Importante:</strong> si en algún momento Netlify te ofrece
-          marcar una variable como “secreta”, hacelo solo con{" "}
+          marcar una variable como “secreta”, hazlo solo con{" "}
           <code>SUPABASE_SERVICE_ROLE_KEY</code>. Las dos{" "}
-          <code>NEXT_PUBLIC_*</code> tienen que quedar normales — si las marcás
+          <code>NEXT_PUBLIC_*</code> tienen que quedar normales — si las marcas
           secretas, el navegador no las recibe y el login no funciona.
           (Importando por <code>.env</code> no te pregunta: quedan bien.)
         </p>
@@ -176,7 +176,7 @@ export function ConnectSupabase({ onContinue }: { onContinue: () => void }) {
       {/* Redeploy reminder — short and human */}
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
         <p className="text-sm text-amber-800">
-          Después de guardar, <strong>volvé a desplegar</strong> y reabrí esta
+          Después de guardar, <strong>vuelve a desplegar</strong> y reabre esta
           página. Vamos a detectar la conexión y seguir solos.
         </p>
       </div>

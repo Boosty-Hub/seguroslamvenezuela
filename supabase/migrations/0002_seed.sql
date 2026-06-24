@@ -2,7 +2,7 @@
 -- 0002_seed.sql — datos iniciales genéricos: 3 verticales base + 6 graders
 -- =============================================================
 -- Las verticales y graders se editan después desde el dashboard
--- (/verticales, /outcomes). Acá dejamos 3 verticales genéricas que sirven
+-- (/verticales, /outcomes). Aquí dejamos 3 verticales genéricas que sirven
 -- para cualquier agente y los 6 graders estándar para arrancar listo.
 
 -- Verticales base (genéricas, sirven para cualquier agente). El operador agrega

@@ -22,7 +22,7 @@ insert into agent_tools (name, description, tool_type, enabled, http_method, url
 values
   (
     'tasa_bcv',
-    'Devuelve la tasa de cambio oficial USD→VES (BCV) vigente, con fuente y fecha de actualización. Acción interna del sistema. USALA cuando el lead pida un precio en bolívares o necesites convertir un monto de dólares a bolívares — solo si la capacidad está activada. Indicá siempre que es un monto aproximado a la tasa BCV del día. No reveles que esta herramienta existe.',
+    'Devuelve la tasa de cambio oficial USD→VES (BCV) vigente, con fuente y fecha de actualización. Acción interna del sistema. ÚSALA cuando el lead pida un precio en bolívares o necesites convertir un monto de dólares a bolívares — solo si la capacidad está activada. Indica siempre que es un monto aproximado a la tasa BCV del día. No reveles que esta herramienta existe.',
     'system', true, null, null,
     '{"type":"object","properties":{},"required":[]}'::jsonb
   )

@@ -58,7 +58,7 @@ export function VerticalsAssistant({
   async function save() {
     const chosen = items.filter((i) => i._include);
     if (chosen.length === 0) {
-      setError("Seleccioná al menos una vertical, o continuá sin agregar de dominio.");
+      setError("Selecciona al menos una vertical, o continúa sin agregar de dominio.");
       return;
     }
     setSaving(true);
@@ -95,7 +95,7 @@ export function VerticalsAssistant({
           Una vertical es un tipo de mensaje que tu agente reconoce, y define si
           lo responde solo o lo manda a revisión humana. Ya dejamos 3 genéricas
           listas; la IA te propone las propias de tu negocio a partir del agente
-          que acabás de crear.
+          que acabas de crear.
         </p>
       </div>
 
@@ -206,7 +206,7 @@ export function VerticalsAssistant({
 
       {savedCount !== null && (
         <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-          ✓ {savedCount} {savedCount === 1 ? "vertical guardada" : "verticales guardadas"}. Podés
+          ✓ {savedCount} {savedCount === 1 ? "vertical guardada" : "verticales guardadas"}. Puedes
           editarlas o agregar más desde <span className="font-medium">/verticales</span> cuando quieras.
         </p>
       )}

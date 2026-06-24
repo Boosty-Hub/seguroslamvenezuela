@@ -46,7 +46,7 @@ grant execute on function public.buscar_precios_seguros(text, text) to anon, aut
 insert into agent_tools (name, description, tool_type, enabled, http_method, url_template, headers, body_template, input_schema, timeout_ms)
 values (
   'generar_cotizacion',
-  'Genera la cotizacion OFICIAL de salud en PDF (titular + TODOS los familiares + uno o varios planes en un mismo PDF). Usala SOLO cuando el cliente confirmo querer la cotizacion oficial o pidio comparar planes. REGLA CRITICA: si el cliente menciono CUALQUIER familiar (esposa, esposo, hijos, padres, etc.) DEBES incluir TODOS en beneficiarios (no omitas ninguno). Obtene los id_plan con la tool buscar_precios_seguros.',
+  'Genera la cotizacion OFICIAL de salud en PDF (titular + TODOS los familiares + uno o varios planes en un mismo PDF). Úsala SOLO cuando el cliente confirmo querer la cotizacion oficial o pidio comparar planes. REGLA CRITICA: si el cliente menciono CUALQUIER familiar (esposa, esposo, hijos, padres, etc.) DEBES incluir TODOS en beneficiarios (no omitas ninguno). Obtén los id_plan con la tool buscar_precios_seguros.',
   'http', true, 'POST',
   'https://nhszqqqqlcwmcsjmgrmv.supabase.co/functions/v1/generar-cotizacion',
   '[{"name":"Content-Type","value":"application/json"},{"name":"Authorization","value":"Bearer {{SUPABASE_ANON_KEY}}"}]'::jsonb,

@@ -50,8 +50,8 @@ export type SetupState = {
 
 const STEPS = [
   { key: "supabase", label: "Base de datos" },
-  { key: "anthropic", label: "Conectá Anthropic" },
-  { key: "agente", label: "Creá tu agente" },
+  { key: "anthropic", label: "Conecta Anthropic" },
+  { key: "agente", label: "Crea tu agente" },
   { key: "verticales", label: "Verticales" },
   { key: "memoria", label: "Memoria y aprendizaje" },
   { key: "kommo", label: "Conectá Kommo" },
@@ -373,7 +373,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
             Configuración del agente
           </h1>
           <p className="mt-1 text-sm text-neutral-600">
-            Seguí los pasos para activar tu agente. Podés retomar desde donde lo
+            Sigue los pasos para activar tu agente. Puedes retomar desde donde lo
             dejaste en cualquier momento.{" "}
             <a className="font-medium underline" href="/inbox">
               Ir al dashboard
@@ -462,7 +462,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
             <form onSubmit={submitAnthropicKey} className="space-y-5">
               <div>
                 <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
-                  2. Conectá Anthropic
+                  2. Conecta Anthropic
                 </h2>
                 <p className="mt-1 text-xs text-neutral-400">
                   Necesitamos tu API key de Anthropic para que el agente pueda funcionar.
@@ -471,9 +471,9 @@ export function SetupWizard({ state }: { state: SetupState }) {
 
               <Steps
                 items={[
-                  "Abrí console.anthropic.com e iniciá sesión con el correo que usás para la API de Claude.",
-                  "Creá un espacio de trabajo (workspace) NUEVO con el nombre de tu cliente o empresa — así la facturación y los datos quedan separados.",
-                  "Dentro de ese workspace, andá a Settings → API keys → Create key, copiala y pegala acá abajo.",
+                  "Abre console.anthropic.com e inicia sesión con el correo que usas para la API de Claude.",
+                  "Crea un espacio de trabajo (workspace) NUEVO con el nombre de tu cliente o empresa — así la facturación y los datos quedan separados.",
+                  "Dentro de ese workspace, ve a Settings → API keys → Create key, cópiala y pégala aquí abajo.",
                 ]}
               />
 
@@ -485,14 +485,14 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   onChange={(e) => setAnthropicApiKey(e.target.value)}
                   placeholder={
                     anthropicDone
-                      ? "•••••• (ya configurada — dejá vacío para conservar)"
+                      ? "•••••• (ya configurada — deja vacío para conservar)"
                       : "sk-ant-..."
                   }
                   className={inputCls + " font-mono"}
                 />
                 <p className={hintCls}>
                   {anthropicDone
-                    ? "Ya hay una key guardada. Dejá el campo vacío para conservarla, o escribí una nueva para reemplazarla."
+                    ? "Ya hay una key guardada. Deja el campo vacío para conservarla, o escribe una nueva para reemplazarla."
                     : "La clave empieza con sk-ant-. Se guarda de forma segura en tu base de datos."}
                 </p>
               </div>
@@ -520,10 +520,10 @@ export function SetupWizard({ state }: { state: SetupState }) {
             <form onSubmit={submitAgente} className="space-y-5">
               <div>
                 <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
-                  3. Creá tu agente
+                  3. Crea tu agente
                 </h2>
                 <p className="mt-1 text-xs text-neutral-400">
-                  Acá le das nombre y personalidad a tu agente — cómo se va a
+                  Aquí le das nombre y personalidad a tu agente — cómo se va a
                   llamar, qué voz va a usar, y de qué manera se va a presentar
                   ante tus leads.
                 </p>
@@ -551,7 +551,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   <p className={hintCls}>
                     El nombre con el que el agente se presenta: tu empresa o el
                     vendedor real. Habla en su nombre. (El asistente de arriba
-                    puede completarlo por vos.)
+                    puede completarlo por ti.)
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -577,13 +577,13 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   rows={8}
                   placeholder={
                     state.hasSystemPrompt
-                      ? "Ya hay una personalidad guardada — dejá vacío para conservarla, o escribí una nueva para reemplazarla."
-                      : "Describí cómo habla el agente, qué puede y no puede decir, cómo saluda, cómo cierra ventas…\n\nPodés completar esto ahora o más tarde desde el panel /agent."
+                      ? "Ya hay una personalidad guardada — deja vacío para conservarla, o escribe una nueva para reemplazarla."
+                      : "Describe cómo habla el agente, qué puede y no puede decir, cómo saluda, cómo cierra ventas…\n\nPuedes completar esto ahora o más tarde desde el panel /agent."
                   }
                   className={inputCls + " leading-relaxed"}
                 />
                 <p className={hintCls}>
-                  Podés editarlo en detalle desde{" "}
+                  Puedes editarlo en detalle desde{" "}
                   <a className="underline" href="/agent">
                     /agent
                   </a>{" "}
@@ -620,8 +620,8 @@ export function SetupWizard({ state }: { state: SetupState }) {
                 {showAdvanced && (
                   <div className="border-t border-neutral-200 px-4 pb-4 pt-3 space-y-4">
                     <p className="text-xs text-neutral-500">
-                      Estos nombres se generan automáticamente. Solo cambialos si
-                      sabés lo que hacés.
+                      Estos nombres se generan automáticamente. Solo cámbialos si
+                      sabes lo que haces.
                     </p>
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div className="space-y-1">
@@ -713,7 +713,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
                 </h2>
                 <p className="mt-1 text-xs text-neutral-400">
                   Las verticales son los tipos de mensaje que tu agente reconoce.
-                  Cada una define si el agente responde sola o manda el mensaje a
+                  Cada una define si el agente responde sola o envía el mensaje a
                   revisión humana. Ya dejamos 3 genéricas listas; la IA te propone
                   las propias de tu negocio a partir del agente que creaste.
                 </p>
@@ -826,7 +826,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
             <form onSubmit={submitKommo} className="space-y-5">
               <div>
                 <h2 className="text-sm font-semibold tracking-tight text-neutral-900">
-                  6. Conectá Kommo
+                  6. Conecta Kommo
                 </h2>
                 <p className="mt-1 text-xs text-neutral-400">
                   Conectamos tu cuenta de Kommo para que el agente pueda recibir
@@ -836,9 +836,9 @@ export function SetupWizard({ state }: { state: SetupState }) {
 
               <Steps
                 items={[
-                  "En Kommo, andá a Configuración → Integraciones → Crear integración privada.",
-                  "En la integración creada, copiá el Token de larga duración (long-lived token). Empieza por eyJ…",
-                  "Completá los campos de abajo con el token y tu subdominio de Kommo.",
+                  "En Kommo, ve a Configuración → Integraciones → Crear integración privada.",
+                  "En la integración creada, copia el Token de larga duración (long-lived token). Empieza por eyJ…",
+                  "Completa los campos de abajo con el token y tu subdominio de Kommo.",
                 ]}
               />
 
@@ -851,7 +851,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   className={inputCls + " font-mono"}
                 />
                 <p className={hintCls}>
-                  El subdominio de tu Kommo, o pegá la URL completa
+                  El subdominio de tu Kommo, o pega la URL completa
                   (ej: <code>miempresa</code> o <code>https://miempresa.kommo.com</code>).
                 </p>
               </div>
@@ -864,7 +864,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   rows={3}
                   placeholder={
                     kommoDone
-                      ? "•••••• (ya configurado — pegá uno nuevo para reemplazar)"
+                      ? "•••••• (ya configurado — pega uno nuevo para reemplazar)"
                       : "eyJ0eXAiOiJKV1Qi..."
                   }
                   className={inputCls + " font-mono break-all"}
@@ -874,7 +874,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
               {/* Webhook — cómo ENTRAN los mensajes de Kommo */}
               <KommoWebhookPanel />
 
-              {/* Respuesta — cómo SALE la respuesta del agente (opcional acá) */}
+              {/* Respuesta — cómo SALE la respuesta del agente (opcional aquí) */}
               <div className="space-y-4 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
                 <div>
                   <h3 className="text-sm font-semibold tracking-tight text-neutral-900">
@@ -882,7 +882,7 @@ export function SetupWizard({ state }: { state: SetupState }) {
                   </h3>
                   <p className="mt-1 text-xs text-neutral-500">
                     El agente escribe su respuesta en un campo de Kommo y un
-                    salesbot la envía al lead. Podés completarlo ahora o más
+                    salesbot la envía al lead. Puedes completarlo ahora o más
                     tarde en{" "}
                     <a className="underline" href="/settings">Configuración</a>.
                   </p>
@@ -901,8 +901,8 @@ export function SetupWizard({ state }: { state: SetupState }) {
                       className={inputCls + " font-mono"}
                     />
                     <p className={hintCls}>
-                      En Kommo → Configuración → Campos del lead, creá un campo de
-                      texto largo y pegá su ID numérico. El agente escribe ahí.
+                      En Kommo → Configuración → Campos del lead, crea un campo de
+                      texto largo y pega su ID numérico. El agente escribe ahí.
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -918,8 +918,8 @@ export function SetupWizard({ state }: { state: SetupState }) {
                       className={inputCls + " font-mono"}
                     />
                     <p className={hintCls}>
-                      En Kommo → Automatización → Salesbots, creá un bot que lea
-                      ese campo y lo envíe al canal del lead. Pegá su ID.
+                      En Kommo → Automatización → Salesbots, crea un bot que lea
+                      ese campo y lo envíe al canal del lead. Pega su ID.
                     </p>
                   </div>
                 </div>
@@ -974,11 +974,11 @@ export function SetupWizard({ state }: { state: SetupState }) {
               <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-xs text-blue-800">
                 <p className="font-medium mb-1">Próximo paso recomendado</p>
                 <p>
-                  Andá a{" "}
+                  Ve a{" "}
                   <a className="font-medium underline" href="/settings">
                     Configuración
                   </a>{" "}
-                  y activá el modo de validación (
+                  y activa el modo de validación (
                   <span className="font-medium">Agente ON + Publicar OFF</span>
                   ) para revisar las respuestas antes de que lleguen a tus leads.
                 </p>

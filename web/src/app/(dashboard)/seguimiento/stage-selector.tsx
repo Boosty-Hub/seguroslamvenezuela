@@ -72,8 +72,8 @@ export function StageSelector({
         Etapas donde se hace seguimiento
       </label>
       <p className="text-[11px] text-neutral-500">
-        Marcá en qué etapas del embudo el agente sigue insistiendo (normalmente
-        una o dos). Si no marcás ninguna, el seguimiento corre en{" "}
+        Marca en qué etapas del embudo el agente sigue insistiendo (normalmente
+        una o dos). Si no marcas ninguna, el seguimiento corre en{" "}
         <span className="font-medium">todas</span> las etapas.
       </p>
 

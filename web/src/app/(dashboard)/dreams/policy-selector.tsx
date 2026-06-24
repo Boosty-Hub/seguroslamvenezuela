@@ -17,7 +17,7 @@ const OPTIONS: { value: string; label: string; hint: string }[] = [
   {
     value: "none",
     label: "Aprobar todo manualmente",
-    hint: "Ningún aprendizaje se aplica hasta que lo apruebes acá.",
+    hint: "Ningún aprendizaje se aplica hasta que lo apruebes aquí.",
   },
 ];
 

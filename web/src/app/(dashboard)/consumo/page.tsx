@@ -122,7 +122,7 @@ export default async function ConsumoPage({
         {showBackfillBanner && <BackfillBanner />}
         <EmptyState
           title="Sin datos de consumo aún"
-          description="Los datos aparecen cuando el agente procesa mensajes. Si ya hay sesiones históricas, importálas con el botón de arriba."
+          description="Los datos aparecen cuando el agente procesa mensajes. Si ya hay sesiones históricas, impórtalas con el botón de arriba."
         />
       </PageShell>
     );
@@ -203,7 +203,7 @@ export default async function ConsumoPage({
         id: "OPT-A",
         title: "Caché CMA bajo",
         description: `El prompt caching está infrautilizado (${(cacheHitRatio * 100).toFixed(1)}% de hits sobre inputs). El caching reduce el costo de input entre 70-90%.`,
-        recommendation: "Estabilizá el system prompt y el orden de los memory stores. Evitá contenido dinámico en la cabeza del contexto.",
+        recommendation: "Estabiliza el system prompt y el orden de los memory stores. Evita contenido dinámico en la cabeza del contexto.",
       });
     }
   }
@@ -214,7 +214,7 @@ export default async function ConsumoPage({
       id: "OPT-B",
       title: "Las respuestas dominan el gasto",
       description: `Las respuestas CMA concentran el ${((genRespCost / totalCost) * 100).toFixed(0)}% del gasto (${formatUsd(genRespCost)} de ${formatUsd(totalCost)}).`,
-      recommendation: "Revisá la cantidad máxima de tool calls por sesión y la longitud del system prompt. Cada herramienta extra suma tokens y tiempo facturable.",
+      recommendation: "Revisa la cantidad máxima de tool calls por sesión y la longitud del system prompt. Cada herramienta extra suma tokens y tiempo facturable.",
     });
   }
 
@@ -229,7 +229,7 @@ export default async function ConsumoPage({
         id: "OPT-C",
         title: "Runtime alto por sesión",
         description: `Las sesiones promedian ${(avgRuntimeMs / 1000).toFixed(0)}s activos. El runtime facturable es $0.08/hora sobre active_seconds.`,
-        recommendation: "Revisá tools lentas, loops del agente o prompts que generan muchas iteraciones. Reducir el p90 de active_seconds baja el costo de runtime directamente.",
+        recommendation: "Revisa tools lentas, loops del agente o prompts que generan muchas iteraciones. Reducir el p90 de active_seconds baja el costo de runtime directamente.",
       });
     }
   }
@@ -248,7 +248,7 @@ export default async function ConsumoPage({
         id: "OPT-E",
         title: "Leer el material por primera vez domina el costo de respuestas",
         description: `La 'primera leída' del material de cada sesión cuesta ≈${formatUsd(cacheWriteUsd)} (${(writeShare * 100).toFixed(0)}% del costo de respuestas). Cada respuesta arranca leyendo TODO: reglas, memoria del lead, dreams y la conversación.`,
-        recommendation: "Anthropic no permite abaratar esa primera leída en este tipo de sesiones (el descuento de 1 hora no aplica acá). La palanca real es darle MENOS material a leer: memoria por lead recortada y prompt magro — cada KB menos se deja de leer y repasar en todas las sesiones del día.",
+        recommendation: "Anthropic no permite abaratar esa primera leída en este tipo de sesiones (el descuento de 1 hora no aplica aquí). La palanca real es darle MENOS material a leer: memoria por lead recortada y prompt magro — cada KB menos se deja de leer y repasar en todas las sesiones del día.",
       });
     }
   }
@@ -262,7 +262,7 @@ export default async function ConsumoPage({
       id: "OPT-D",
       title: "Generaciones de dashboard con peso significativo",
       description: `Las herramientas IA del dashboard suman el ${((dashCost / totalCost) * 100).toFixed(1)}% del gasto total (${formatUsd(dashCost)}).`,
-      recommendation: "Considerá cachear sugerencias de verticales/graders, o reducir la frecuencia de uso de generaciones asistidas.",
+      recommendation: "Considera cachear sugerencias de verticales/graders, o reducir la frecuencia de uso de generaciones asistidas.",
     });
   }
 
@@ -305,7 +305,7 @@ export default async function ConsumoPage({
 
   // Con qué modelos se midió realmente el período (puede mezclar: ayer Sonnet,
   // hoy Haiku). Si difiere del modelo configurado AHORA, lo aclaramos en el
-  // flujo — el promedio es histórico real, el badge es el modelo de acá en más.
+  // flujo — el promedio es histórico real, el badge es el modelo de aquí en más.
   const MODEL_SHORT: Record<string, string> = {
     "claude-haiku-4-5": "Haiku 4.5",
     "claude-sonnet-4-6": "Sonnet 4.6",
@@ -521,7 +521,7 @@ export default async function ConsumoPage({
       <SectionCard
         icon={<BarChart3 size={17} />}
         title="Modelos por componente"
-        description="Elegí qué modelo usa cada pieza. Más barato = menos calidad; más caro = mejor. Aplica en menos de 1 minuto, sin redeploy."
+        description="Elige qué modelo usa cada pieza. Más barato = menos calidad; más caro = mejor. Aplica en menos de 1 minuto, sin redeploy."
       >
         <ModelsPanel current={currentModels} />
       </SectionCard>

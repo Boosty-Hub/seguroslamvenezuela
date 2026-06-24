@@ -130,7 +130,7 @@ export default async function AgentPage({
       {saved && sync === "pending" && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           ✓ Guardado en la plataforma. El agente todavía NO está aprovisionado —
-          completá el <a className="font-medium underline" href="/setup">setup</a> para
+          completa el <a className="font-medium underline" href="/setup">setup</a> para
           crearlo en Anthropic con este prompt.
         </div>
       )}
@@ -180,7 +180,7 @@ export default async function AgentPage({
               <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
                 <p className="text-xs uppercase tracking-wide text-neutral-500">Agent ID</p>
                 <p className="mt-1 font-mono text-xs text-neutral-900 break-all">
-                  {cfg.ANTHROPIC_AGENT_ID ?? "(no configurado — corré /setup)"}
+                  {cfg.ANTHROPIC_AGENT_ID ?? "(no configurado — corre /setup)"}
                 </p>
               </div>
               <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">

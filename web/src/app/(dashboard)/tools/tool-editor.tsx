@@ -52,7 +52,7 @@ function ParamBuilder({
     <div className="space-y-2">
       {params.length === 0 && (
         <p className="text-xs text-neutral-400 italic">
-          Sin parámetros. Añadí al menos uno si el agente necesita datos para llamar a esta tool.
+          Sin parámetros. Añade al menos uno si el agente necesita datos para llamar a esta tool.
         </p>
       )}
       {params.map((row) => (
@@ -929,7 +929,7 @@ function SystemToolsPanel({ tools }: { tools: AgentTool[] }) {
     <div className="space-y-6">
       <p className="text-sm text-neutral-600">
         Capacidades internas del agente. Vienen con el sistema en todos los proyectos: no se crean
-        ni se editan acá — solo se muestran para que sepas qué puede hacer.
+        ni se editan aquí — solo se muestran para que sepas qué puede hacer.
       </p>
 
       {builtins.length > 0 && (
@@ -989,11 +989,11 @@ function SystemToolsPanel({ tools }: { tools: AgentTool[] }) {
           </div>
           <p className="text-xs text-neutral-500">
             El agente consulta el catálogo y vende sobre Shopify cuando una vertical o su voz se lo
-            indica. Conectá la tienda en{" "}
+            indica. Conecta la tienda en{" "}
             <a href="/settings" className="font-medium text-violet-700 underline">
               Configuración
             </a>{" "}
-            y activá las capacidades en{" "}
+            y activa las capacidades en{" "}
             <a href="/agent?tab=acciones" className="font-medium text-violet-700 underline">
               Agente → Acciones
             </a>
@@ -1032,7 +1032,7 @@ function HttpToolsPanel({
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-neutral-600">
-          Herramientas HTTP que creás vos para que el agente consulte APIs externas (stock, precios,
+          Herramientas HTTP que creas para que el agente consulte APIs externas (stock, precios,
           turnos, etc.). Se sincronizan con Anthropic al guardar.
         </p>
         <NewToolButton />
@@ -1045,7 +1045,7 @@ function HttpToolsPanel({
           </div>
           <p className="text-sm font-medium text-neutral-900">Sin herramientas creadas</p>
           <p className="mt-1 text-xs text-neutral-500">
-            Usá <span className="font-medium text-neutral-700">+ Nueva tool</span> para conectar una API externa.
+            Usa <span className="font-medium text-neutral-700">+ Nueva tool</span> para conectar una API externa.
           </p>
         </div>
       ) : (

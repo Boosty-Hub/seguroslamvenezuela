@@ -49,7 +49,7 @@ create policy authenticated_all on agent_skip_rules
 -- Ejemplo deshabilitado para que el operador vea la forma de una regla.
 insert into agent_skip_rules (pattern, match_type, case_sensitive, enabled, description)
 select '', 'mention_tag', false, false,
-       'Ejemplo: ignorar comentarios que etiquetan a alguien (ej: "@maria ganatelo"). Activalo si no querés que el agente responda etiquetas/sorteos.'
+       'Ejemplo: ignorar comentarios que etiquetan a alguien (ej: "@maria gánatelo"). Actívalo si no quieres que el agente responda etiquetas/sorteos.'
 where not exists (select 1 from agent_skip_rules);
 
 -- ---- D. Cooldown + tope de respuestas por lead ---------------------------

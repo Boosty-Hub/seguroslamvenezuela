@@ -111,7 +111,7 @@ vertical: ${verticalSlug}
 [RESPUESTA DEL AGENTE QUE VAS A EVALUAR]
 """${responseText}"""
 
-Evaluá según las instrucciones del system prompt y devolvé JSON estricto.`;
+Evalúa según las instrucciones del system prompt y devuelve JSON estricto.`;
 
   const isPassFail = grader.scale === "pass_fail";
   const schema = isPassFail

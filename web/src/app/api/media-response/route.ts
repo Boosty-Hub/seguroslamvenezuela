@@ -5,7 +5,7 @@ import { configValue, setConfigValues } from "@/lib/runtime-config";
 // Habilita/deshabilita que el agente responda a adjuntos del lead.
 // images/documents son nativos en Claude. audio requiere transcripción
 // externa (OpenAI Whisper): para activarlo hace falta una OPENAI_API_KEY
-// en runtime_config (se puede mandar acá mismo como body.openaiKey).
+// en runtime_config (se puede mandar aquí mismo como body.openaiKey).
 export async function POST(request: Request) {
   const supabase = createSupabaseServerClient();
   const {

@@ -162,7 +162,7 @@ function VerticalAiAssist({
 
   async function generate() {
     if (!aiPrompt.trim()) {
-      setErr("Describí qué querés.");
+      setErr("Describe qué quieres.");
       return;
     }
     setBusy(true);
@@ -190,12 +190,12 @@ function VerticalAiAssist({
       </label>
       <p className="text-xs text-neutral-500">
         {current
-          ? "Describí el ajuste que querés y la IA reescribe la vertical. Después editás lo que quieras."
-          : "Describí en una frase qué vertical querés y la IA completa los campos usando el contexto de tu agente."}
+          ? "Describe el ajuste que quieres y la IA reescribe la vertical. Después editas lo que quieras."
+          : "Describe en una frase qué vertical quieres y la IA completa los campos usando el contexto de tu agente."}
       </p>
       <p className="text-[11px] text-neutral-400">
         💡 Si tu negocio lo pide, la IA puede incluir acciones en el CRM (mover de etapa, guardar
-        datos) usando los nombres reales de Kommo. Activá esas acciones en{" "}
+        datos) usando los nombres reales de Kommo. Activa esas acciones en{" "}
         <a href="/agent?tab=acciones" className="font-medium text-violet-700 underline">
           Agente → Acciones
         </a>
@@ -270,7 +270,7 @@ function VerticalForm({ vertical, onDone }: { vertical: Vertical; onDone: () => 
     <form onSubmit={save} className="space-y-4 max-w-3xl">
       <VerticalAiAssist
         current={{ name, description, system_prompt }}
-        placeholder="Ej: que sea más estricto, o agregá manejo de reclamos"
+        placeholder="Ej: que sea más estricto, o agrega manejo de reclamos"
         onResult={(v) => {
           if (v.name) setName(v.name);
           if (v.description != null) setDescription(v.description);

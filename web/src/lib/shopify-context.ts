@@ -50,7 +50,7 @@ export async function buildShopifyContext(): Promise<string> {
     "- consultar el estado de un pedido (por número, email o teléfono),",
     "- crear un link de pago (checkout) para cerrar la venta dentro del chat.",
     "Cómo aprovecharlo al redactar:",
-    "- Si el negocio implica responder por productos/stock/precios, por pedidos, o vender por chat, instruí al agente a usar esas capacidades (ej: «si preguntan por un producto, buscalo y pasá precio y disponibilidad»; «si quieren comprar, generales el link de pago»).",
+    "- Si el negocio implica responder por productos/stock/precios, por pedidos, o vender por chat, instruye al agente a usar esas capacidades (ej: «si preguntan por un producto, búscalo y pasa precio y disponibilidad»; «si quieren comprar, genérales el link de pago»).",
     "- Estas acciones el operador las activa en «Agente → Acciones»; mientras estén apagadas el agente simplemente las ignora.",
     categoriesLine,
   ]

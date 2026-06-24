@@ -3,7 +3,7 @@
 // Pestañas de Configuración (segmented control), mismo patrón que /agent.
 // Reemplaza el scroll vertical largo de grupos: cada grupo vive en su pestaña.
 // El contenido de cada slot se renderiza en el server (forms con action=, datos
-// de Supabase) y se pasa como prop; acá solo alternamos cuál se muestra.
+// de Supabase) y se pasa como prop; aquí solo alternamos cuál se muestra.
 // Se mantienen los tres montados (CSS hidden) para no perder lo tipeado en los
 // forms al cambiar de pestaña.
 

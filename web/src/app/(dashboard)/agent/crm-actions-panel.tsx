@@ -80,7 +80,7 @@ export function CrmActionsPanel({ initial }: { initial: CrmFlags }) {
               Cuando está activo, el agente puede —además de responder— mover el lead de etapa y
               completar datos en Kommo, identificando etapas y campos{" "}
               <span className="font-medium text-neutral-700">por nombre</span> (los lee en vivo,
-              no hace falta configurar códigos). Solo actúa cuando se lo indicás.
+              no hace falta configurar códigos). Solo actúa cuando se lo indicas.
             </p>
           </div>
           <Switch checked={flags.enabled} disabled={busy} onChange={toggleMaster} />
@@ -126,20 +126,20 @@ export function CrmActionsPanel({ initial }: { initial: CrmFlags }) {
 
       {/* Cómo indicarle */}
       <div className="space-y-2 rounded-xl border border-violet-200 bg-violet-50 p-4">
-        <p className="text-xs font-medium text-neutral-700">✨ Cómo le decís cuándo actuar</p>
+        <p className="text-xs font-medium text-neutral-700">✨ Cómo le dices cuándo actuar</p>
         <p className="text-xs text-neutral-600">
-          El agente solo actúa cuando una instrucción se lo pide. Escribila en la{" "}
+          El agente solo actúa cuando una instrucción se lo pide. Escríbela en la{" "}
           <span className="font-medium">voz del agente</span> (tab Identidad) o en una{" "}
           <a href="/verticales" className="font-medium text-violet-700 underline">
             vertical
           </a>
-          . Ejemplos que podés pegar:
+          . Ejemplos que puedes pegar:
         </p>
         <div className="space-y-1.5 pt-1">
           {[
-            "Cuando el lead confirme la compra, movelo a la etapa «Ganado».",
-            "Si el lead te dice su presupuesto, guardalo en el campo «Presupuesto» del lead.",
-            "Cuando te den el email, guardalo en el campo «Email» del contacto.",
+            "Cuando el lead confirme la compra, muévelo a la etapa «Ganado».",
+            "Si el lead te dice su presupuesto, guárdalo en el campo «Presupuesto» del lead.",
+            "Cuando te den el email, guárdalo en el campo «Email» del contacto.",
           ].map((ej) => (
             <p
               key={ej}
@@ -150,8 +150,8 @@ export function CrmActionsPanel({ initial }: { initial: CrmFlags }) {
           ))}
         </div>
         <p className="pt-1 text-[11px] text-neutral-500">
-          No necesitás saber IDs ni códigos: el agente busca la etapa o el campo por su nombre tal
-          como aparece en Kommo. Si lo escribís parecido, igual lo encuentra.
+          No necesitas saber IDs ni códigos: el agente busca la etapa o el campo por su nombre tal
+          como aparece en Kommo. Si lo escribes parecido, igual lo encuentra.
         </p>
       </div>
     </div>

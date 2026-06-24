@@ -44,13 +44,13 @@ export async function POST(request: Request) {
 
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "Configurá primero la API key de Anthropic." },
+      { ok: false, error: "Configura primero la API key de Anthropic." },
       { status: 400 }
     );
   }
   if (!systemPrompt && !extra) {
     return NextResponse.json(
-      { ok: false, error: "Creá primero el agente (su system prompt) para poder sugerir verticales." },
+      { ok: false, error: "Crea primero el agente (su system prompt) para poder sugerir verticales." },
       { status: 400 }
     );
   }
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
               system_prompt: z
                 .string()
                 .describe(
-                  "Instrucción breve (2-4 frases) para el agente sobre cómo manejar este tipo de mensaje, en la voz del operador. No incluyas el nombre del negocio literal; hablá en segunda persona al agente."
+                  "Instrucción breve (2-4 frases) para el agente sobre cómo manejar este tipo de mensaje, en la voz del operador, en español venezolano (tú/tienes, registro de negocio neutro, nunca argentino vos/tenés). No incluyas el nombre del negocio literal; habla en segunda persona al agente."
                 ),
               auto_reply: z
                 .boolean()
@@ -108,16 +108,17 @@ export async function POST(request: Request) {
             "Entre 2 y 5 verticales ESPECÍFICAS del negocio. NO incluyas categorías genéricas como 'general', 'engagement social/saludos' ni 'hate/sarcasmo' — esas ya existen."
           ),
       }),
-      prompt: `Sos un experto en clasificación de mensajes entrantes para agentes de ventas/atención sobre CRM.
+      prompt: `Eres un experto en clasificación de mensajes entrantes para agentes de ventas/atención sobre CRM.
 
-A partir del siguiente agente ya configurado, proponé las verticales (categorías de mensajes entrantes) ESPECÍFICAS de este negocio. Cada vertical agrupa un tipo de consulta y define si el agente puede responderla solo o si debe ir a revisión humana.
+A partir del siguiente agente ya configurado, propón las verticales (categorías de mensajes entrantes) ESPECÍFICAS de este negocio. Cada vertical agrupa un tipo de consulta y define si el agente puede responderla solo o si debe ir a revisión humana.
 
 Reglas:
-- Proponé SOLO verticales propias del dominio del negocio (productos, servicios, etapas del funnel). NO repitas las genéricas ('general', saludos/engagement, hate/sarcasmo): esas ya están creadas.
+- Todo el texto en español que generes (en especial cada system_prompt) debe estar en español venezolano (tú/tienes, registro de negocio neutro), nunca argentino (vos/tenés).
+- Propón SOLO verticales propias del dominio del negocio (productos, servicios, etapas del funnel). NO repitas las genéricas ('general', saludos/engagement, hate/sarcasmo): esas ya están creadas.
 - Consultas comerciales o de información clara: auto_reply=true, requires_review=false.
 - Temas sensibles (reclamos, pagos, datos personales, soporte crítico): auto_reply=false, requires_review=true.
-- Si una vertical implica una ACCIÓN EN EL CRM (mover de etapa, guardar un dato en un campo), incluí esa instrucción en su system_prompt usando los nombres EXACTOS de Kommo (ver capacidad del agente en el contexto). Si no aplica, no la agregues.
-- slug en snake_case. system_prompt en segunda persona dirigido al agente, en español neutro, sin el nombre literal del negocio.
+- Si una vertical implica una ACCIÓN EN EL CRM (mover de etapa, guardar un dato en un campo), incluye esa instrucción en su system_prompt usando los nombres EXACTOS de Kommo (ver capacidad del agente en el contexto). Si no aplica, no la agregues.
+- slug en snake_case. system_prompt en segunda persona dirigido al agente, en español venezolano neutro, sin el nombre literal del negocio.
 
 CONTEXTO DEL AGENTE:
 ${context}`,

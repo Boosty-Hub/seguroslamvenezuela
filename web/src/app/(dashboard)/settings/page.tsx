@@ -140,7 +140,7 @@ export default async function SettingsPage({
               defaultValue={config?.response_custom_field_id ?? null}
             />
             <p className="text-xs text-neutral-500">
-              Elegí el campo del lead (de tu cuenta Kommo) donde el agente deja cada respuesta. Si no aparece, creálo en Kommo como campo de texto largo y recargá.
+              Elige el campo del lead (de tu cuenta Kommo) donde el agente deja cada respuesta. Si no aparece, créalo en Kommo como campo de texto largo y recarga.
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export default async function SettingsPage({
               className={inputCls + " font-mono"}
             />
             <p className="text-xs text-neutral-500">
-              Kommo no permite listar los bots por API, por eso va el número a mano: abrí tu bot en Kommo → Salesbot y copiá el número que aparece en la URL (…/salesbot/<span className="font-mono">12345</span>).
+              Kommo no permite listar los bots por API, por eso va el número a mano: abre tu bot en Kommo → Salesbot y copia el número que aparece en la URL (…/salesbot/<span className="font-mono">12345</span>).
             </p>
           </div>
 
@@ -199,7 +199,7 @@ export default async function SettingsPage({
             </label>
             <p className="text-xs text-neutral-500">
               Si está desactivado, el sistema genera drafts pero NO los publica a Kommo (shadow mode seguro).
-              Activalo cuando estés listo para producción.
+              Actívalo cuando estés listo para producción.
             </p>
           </div>
 
@@ -224,12 +224,12 @@ export default async function SettingsPage({
             <p className="text-xs text-neutral-500">
               Si está activo, el agente responde y publica SIEMPRE, aunque el mensaje entrara a revisión humana.
               Solo se puede activar con <span className="font-medium">Publishing habilitado</span>
-              {!config?.publishing_enabled && " (activá y guardá Publishing primero)"}.
+              {!config?.publishing_enabled && " (activa y guarda Publishing primero)"}.
             </p>
           </div>
 
           <p className="text-xs text-neutral-400">
-            ¿Buscás los límites de respuesta por lead o apagar el agente para un lead?{" "}
+            ¿Buscas los límites de respuesta por lead o apagar el agente para un lead?{" "}
             <a href="/agent?tab=filtros" className="font-medium text-brand underline">
               Agente → Filtros
             </a>

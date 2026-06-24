@@ -208,7 +208,7 @@ async function runFollowUpAgent(opts: {
 
 Fecha y hora actual: ${formatNow(deps.timezone)} (zona horaria ${deps.timezone}).
 
-Lead: ${lead.id}. Revisá ${masterPath}/voice/ y ${masterPath}/dreams/, y la memoria del lead en ${leadsPath}/${lead.id}/ si existe.
+Lead: ${lead.id}. Revisa ${masterPath}/voice/ y ${masterPath}/dreams/, y la memoria del lead en ${leadsPath}/${lead.id}/ si existe.
 
 Últimos mensajes del lead:
 """
@@ -223,12 +223,12 @@ ${template.body}
 Variables a completar (cada una rellena un campo de Kommo que la plantilla lee):
 ${variablesBlock}
 
-Decidí:
-- send: el lead sigue siendo un buen candidato a reactivar; completá TODAS las variables con valores apropiados a su contexto.
+Decide:
+- send: el lead sigue siendo un buen candidato a reactivar; completa TODAS las variables con valores apropiados a su contexto.
 - skip: hoy no conviene enviar (sin perder el paso); se reintenta en la próxima ventana.
 - stop: el lead pidió no ser contactado, ya compró, o claramente no corresponde seguir; corta la secuencia.
 
-Respondé EXACTAMENTE en este formato y nada más:
+Responde EXACTAMENTE en este formato y nada más:
 <accion>send|skip|stop</accion>
 <variables>{"nombre_var":"valor", ...}</variables>
 <razon>1 frase</razon>`;
@@ -243,13 +243,13 @@ Respondé EXACTAMENTE en este formato y nada más:
         type: "memory_store",
         memory_store_id: memstoreMaster,
         access: "read_only",
-        instructions: `Voz del operador (reglas + ejemplos) en /voice/. Knowledge base destilada en /kb/. Aprendizajes de Dreams en /dreams/. Consultá antes de decidir.`,
+        instructions: `Voz del operador (reglas + ejemplos) en /voice/. Knowledge base destilada en /kb/. Aprendizajes de Dreams en /dreams/. Consulta antes de decidir.`,
       },
       {
         type: "memory_store",
         memory_store_id: memstoreLeads,
         access: "read_write",
-        instructions: `Memoria por lead. El lead actual es ${lead.id}. Leé /${lead.id}/conversation.md y /${lead.id}/learnings.md si existen.`,
+        instructions: `Memoria por lead. El lead actual es ${lead.id}. Lee /${lead.id}/conversation.md y /${lead.id}/learnings.md si existen.`,
       },
     ],
   });
@@ -319,7 +319,7 @@ async function processLead(row: DueLeadRow, deps: Deps): Promise<void> {
   // refresca con inbounds (process-inbound) o cuando el agente mueve la etapa.
   // Un lead ganado/perdido/convertido FUERA DE BANDA (vendedor o salesbot, sin
   // mensaje entrante) deja el cache stale y el gate lo dejaría pasar → seguimiento
-  // a un cliente ya convertido. Acá consultamos la etapa real de Kommo antes de
+  // a un cliente ya convertido. Aquí consultamos la etapa real de Kommo antes de
   // gastar la sesión CMA y decidimos sobre ese valor.
   let liveStatusId: number;
   let liveResponsibleUserId: number | null;

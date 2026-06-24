@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   const apiKey = await configValue("ANTHROPIC_API_KEY");
   if (!apiKey) {
     return NextResponse.json(
-      { ok: false, error: "Configurá primero la API key de Anthropic." },
+      { ok: false, error: "Configura primero la API key de Anthropic." },
       { status: 400 }
     );
   }
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
             "Nombre corto y amigable para mostrar en el panel/dashboard (ej: 'Agente SUPERCINES', 'Asistente de Ventas')"
           ),
       }),
-      prompt: `Del siguiente negocio, extraé el nombre del operador/marca y un nombre para el panel.\n\n${description}`,
+      prompt: `Del siguiente negocio, extrae el nombre del operador/marca y un nombre para el panel. Cualquier texto en español que generes debe estar en español venezolano (tú/tienes), nunca argentino (vos/tenés).\n\n${description}`,
     });
     await recordWebUsage({ component: "dashboard_suggest_identity", model: "claude-sonnet-4-6", usage });
     return NextResponse.json({ ok: true, ...object });

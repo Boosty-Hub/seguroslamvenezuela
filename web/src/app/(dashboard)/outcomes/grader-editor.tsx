@@ -41,7 +41,7 @@ function GraderAiAssist({
 
   async function generate() {
     if (!aiPrompt.trim()) {
-      setErr("Describí qué querés medir.");
+      setErr("Describe qué quieres medir.");
       return;
     }
     setBusy(true);
@@ -69,8 +69,8 @@ function GraderAiAssist({
       </label>
       <p className="text-xs text-neutral-500">
         {current
-          ? "Describí el ajuste que querés y la IA reescribe el grader. Después editás lo que quieras."
-          : "Describí qué querés medir y la IA arma el grader completo usando el contexto de tu agente."}
+          ? "Describe el ajuste que quieres y la IA reescribe el grader. Después editas lo que quieras."
+          : "Describe qué quieres medir y la IA arma el grader completo usando el contexto de tu agente."}
       </p>
       <div className="flex flex-col gap-2 sm:flex-row">
         <input
@@ -388,7 +388,7 @@ export function NewGraderForm() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           rows={6}
-          placeholder="Eres un evaluador imparcial. Tu única tarea es decidir si la respuesta del agente cumple con X. Devolvé JSON: {score: 0.0-1.0, reasoning: '...'}"
+          placeholder="Eres un evaluador imparcial. Tu única tarea es decidir si la respuesta del agente cumple con X. Devuelve JSON: {score: 0.0-1.0, reasoning: '...'}"
           className={`mt-1 ${inputCls} min-h-[6rem] resize-y font-mono`}
         />
       </div>

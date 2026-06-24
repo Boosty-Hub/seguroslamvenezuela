@@ -33,7 +33,7 @@ export default async function VerticalesPage() {
       {verticalList.length === 0 ? (
         <EmptyState
           title="Sin verticales configuradas"
-          description="Agregá una vertical para que el clasificador pueda categorizar los mensajes entrantes."
+          description="Agrega una vertical para que el clasificador pueda categorizar los mensajes entrantes."
         />
       ) : (
         <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-card">

@@ -11,7 +11,7 @@
 //     "Actualizar ahora" para aplicarlas manualmente desde cualquier pestaña.
 //
 // El drift se detecta en /api/provision/updates (server-side, con el token sbp
-// guardado en DB — no hay que pegarlo acá). Aplicar es idempotente: usa los
+// guardado en DB — no hay que pegarlo aquí). Aplicar es idempotente: usa los
 // mismos endpoints que el panel de /settings (migrate + functions/deploy).
 
 import { useCallback, useEffect, useState } from "react";

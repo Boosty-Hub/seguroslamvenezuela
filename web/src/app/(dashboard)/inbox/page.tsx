@@ -720,8 +720,8 @@ export default async function InboxPage({
             <div className="flex h-full items-center justify-center p-8">
               <EmptyState
                 icon={<MessageSquare size={20} />}
-                title="Seleccioná un lead"
-                description="Elegí una conversación de la lista para verla acá."
+                title="Selecciona un lead"
+                description="Elige una conversación de la lista para verla aquí."
               />
             </div>
           )}

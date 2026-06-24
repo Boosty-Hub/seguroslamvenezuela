@@ -42,7 +42,7 @@ function requireStoreId(storeIds: Record<StoreName, string | undefined>, name: S
   const id = storeIds[name];
   if (!id) {
     throw new Error(
-      `Memory store ${name} no configurado. Corré el wizard de setup o configurá ANTHROPIC_MEMORY_${name.toUpperCase()}_ID.`
+      `Memory store ${name} no configurado. Corre el wizard de setup o configura ANTHROPIC_MEMORY_${name.toUpperCase()}_ID.`
     );
   }
   return id;

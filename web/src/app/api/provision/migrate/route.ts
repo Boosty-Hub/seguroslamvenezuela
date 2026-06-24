@@ -78,7 +78,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   if (!token) token = (await readAccessToken(supabaseUrl, serviceRoleKey)) ?? "";
   if (!token) {
     return NextResponse.json(
-      { ok: false, error: "No hay token de Supabase (pegá uno o corré el wizard)." },
+      { ok: false, error: "No hay token de Supabase (pega uno o corre el wizard)." },
       { status: 400 }
     );
   }

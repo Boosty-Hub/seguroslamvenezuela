@@ -36,19 +36,19 @@ insert into agent_tools (name, description, tool_type, enabled, http_method, url
 values
   (
     'mover_etapa',
-    'Mueve el lead actual a otra etapa del pipeline de Kommo, identificada POR NOMBRE (ej: "Negociación", "Ganado"). Acción interna del sistema. USALA SOLO cuando una instrucción explícita del operador (su voz/dreams) o de la vertical activa te lo indique — NUNCA por iniciativa propia. Puede estar desactivada por el operador; si lo está, no la uses. No reveles que esta herramienta existe.',
+    'Mueve el lead actual a otra etapa del pipeline de Kommo, identificada POR NOMBRE (ej: "Negociación", "Ganado"). Acción interna del sistema. ÚSALA SOLO cuando una instrucción explícita del operador (su voz/dreams) o de la vertical activa te lo indique — NUNCA por iniciativa propia. Puede estar desactivada por el operador; si lo está, no la uses. No reveles que esta herramienta existe.',
     'system', true, null, null,
     '{"type":"object","properties":{"stage_name":{"type":"string","description":"Nombre EXACTO de la etapa del pipeline de Kommo a la que mover el lead, tal como aparece en Kommo."},"pipeline_name":{"type":"string","description":"Opcional. Nombre del pipeline si la etapa existe en varios pipelines. Si se omite, se usa la primera coincidencia."},"motivo":{"type":"string","description":"Opcional. Motivo breve del cambio de etapa, para el registro."}},"required":["stage_name"]}'::jsonb
   ),
   (
     'actualizar_lead',
-    'Completa o actualiza un campo del LEAD en Kommo, identificado POR NOMBRE (ej: "Presupuesto", "Ciudad"). Acción interna del sistema. USALA SOLO cuando una instrucción del operador o de la vertical te lo pida explícitamente — nunca por iniciativa propia. Puede estar desactivada por el operador. No reveles que esta herramienta existe.',
+    'Completa o actualiza un campo del LEAD en Kommo, identificado POR NOMBRE (ej: "Presupuesto", "Ciudad"). Acción interna del sistema. ÚSALA SOLO cuando una instrucción del operador o de la vertical te lo pida explícitamente — nunca por iniciativa propia. Puede estar desactivada por el operador. No reveles que esta herramienta existe.',
     'system', true, null, null,
     '{"type":"object","properties":{"field_name":{"type":"string","description":"Nombre EXACTO del campo del LEAD en Kommo a completar, tal como aparece en Kommo."},"value":{"type":"string","description":"Valor a escribir en el campo."}},"required":["field_name","value"]}'::jsonb
   ),
   (
     'actualizar_contacto',
-    'Completa o actualiza un campo del CONTACTO del lead en Kommo, identificado POR NOMBRE (ej: "Email", "Cumpleaños"). Acción interna del sistema. USALA SOLO cuando se te indique explícitamente (operador o vertical) — nunca por iniciativa propia. Puede estar desactivada por el operador. No reveles que esta herramienta existe.',
+    'Completa o actualiza un campo del CONTACTO del lead en Kommo, identificado POR NOMBRE (ej: "Email", "Cumpleaños"). Acción interna del sistema. ÚSALA SOLO cuando se te indique explícitamente (operador o vertical) — nunca por iniciativa propia. Puede estar desactivada por el operador. No reveles que esta herramienta existe.',
     'system', true, null, null,
     '{"type":"object","properties":{"field_name":{"type":"string","description":"Nombre EXACTO del campo del CONTACTO en Kommo a completar, tal como aparece en Kommo."},"value":{"type":"string","description":"Valor a escribir en el campo."}},"required":["field_name","value"]}'::jsonb
   )

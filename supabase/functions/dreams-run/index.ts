@@ -91,7 +91,7 @@ async function gatherDaily(): Promise<Gathered> {
 // ---------------- Weekly: learnings de leads, anonimizados ----------------
 async function gatherWeekly(): Promise<Gathered> {
   // Listamos los archivos /<lead_id>/learnings.md en el leads store
-  // y los traemos. Para simplicidad acá usamos lo mismo que daily pero 7 días.
+  // y los traemos. Para simplicidad aquí usamos lo mismo que daily pero 7 días.
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   const { data: messages, error } = await supabase
     .from("messages")
@@ -160,7 +160,7 @@ ${transcript || "(sin conversaciones en el período)"}
 
 Tu salida debe ser un JSON con un array "learnings". Cada item debe ser un aprendizaje accionable que merezca guardarse como regla persistente. Categorías permitidas:
 - "objection_pattern": una objeción recurrente y cómo responderla
-- "voice_rule": una observación sobre tono/voz que el agente debe replicar (si la voz del operador en su system prompt tiene reglas regionales o estilísticas y detectás que el agente las violó, flaggéalo como anti_pattern)
+- "voice_rule": una observación sobre tono/voz que el agente debe replicar (si la voz del operador en su system prompt tiene reglas regionales o estilísticas y detectas que el agente las violó, flaggéalo como anti_pattern)
 - "factual_gap": una pregunta factual recurrente que NO está en la KB y debería agregarse
 - "successful_phrasing": una frase o estructura que funcionó bien
 - "anti_pattern": algo que el agente hizo y NO debería repetir
@@ -171,10 +171,10 @@ Cada learning lleva además una "severity":
 - "sugerencia": refuerzo de algo que funcionó o una mejora opcional de estilo/flujo.
 
 Reglas:
-- Escribí los learnings en el mismo registro/voz que define el system prompt del agente.
+- Escribe los learnings en el mismo registro/voz que define el system prompt del agente.
 - NO inventes aprendizajes. Si no hay patrón claro, devuelve learnings: [].
 - Cada aprendizaje debe ser ESPECÍFICO, no genérico ("siempre sé empático" NO sirve).
-- Citá brevemente la evidencia (qué turno/conversación la respalda).
+- Cita brevemente la evidencia (qué turno/conversación la respalda).
 - Sé conservador con "error": resérvalo para fallas reales del agente, no para gaps de información.
 - Máximo 8 learnings por run.
 
