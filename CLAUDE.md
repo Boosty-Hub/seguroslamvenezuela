@@ -4,9 +4,37 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Qué es
 
-Template para construir un **agente conversacional sobre Kommo CRM** con clasificación (Haiku 4.5), respuesta vía Anthropic Managed Agent (Sonnet 4.6 + Memory Stores), aprendizaje automático nocturno (Dreams) y evaluación de calidad (Outcomes). Se customiza para cualquier operador **desde el dashboard** (`/setup` + `/agent`), sin tocar código.
+**Seguros LAM — el agente de IA "Valentina"**, una corredora de seguros de salud de Venezuela que atiende leads por WhatsApp vía Kommo CRM. Construido **sobre el template `Boosty-Hub/Template-Agent-kommo`** (clasificación Haiku 4.5 + respuesta vía Anthropic Managed Agent Sonnet 4.6 + Memory Stores + Dreams + Outcomes) y **fusionado** con la base de conocimientos vectorizada (RAG) y el módulo de Precios Diarios que antes vivían en un proyecto aparte consumido por **n8n**.
 
-Repo: `web/` (Next.js 14 dashboard + API routes) + `supabase/` (Postgres migrations + Edge Functions Deno) + `agent/` (template de system prompt).
+Repo: `web/` (Next.js 14 dashboard + API routes) + `supabase/` (Postgres migrations + Edge Functions Deno) + `agent/` (system prompt; el prompt vivo de Valentina está en `runtime_config.SYSTEM_PROMPT`).
+
+> Este repo es **un cliente concreto** (single-tenant, project ref Supabase `nhszqqqqlcwmcsjmgrmv`), NO el template genérico. La maquinaria descrita más abajo viene del template; lo **específico de Seguros LAM** está en la sección siguiente. El trabajo de fusión vive en la rama `fusion-template`.
+
+## Seguros LAM — la fusión (lo específico de este cliente)
+
+Regla absoluta: **todo se construyó SIN OpenAI**. Embeddings = `gte-small` 384 (Supabase AI); visión/OCR/extracción de precios = **Claude**. Lo añadido sobre el template son las migraciones `0042`–`0050` y las Edge Functions `daily-price-sync` / `extract-prices` / `generar-cotizacion`.
+
+### Base de conocimiento enriquecida (módulo Contenido → pestaña "Base de conocimiento")
+- Ingesta `web/src/app/api/kb/ingest`: además de PDF/DOCX/TXT/MD/SRT/VTT acepta **XLSX/CSV e imágenes**, con detección por **magic-bytes** (`web/src/lib/kb-parsers.ts: detectTrueType`).
+- **OCR con Claude vision** (`web/src/lib/ocr-claude.ts`) para imágenes y PDF escaneado (fallback cuando `pdf-parse` no extrae texto). `OCR_MODEL` default `claude-haiku-4-5`.
+- **Taxonomía** (`web/src/lib/collections.ts`): 8 aseguradoras (`collection`) + 13 tipos de póliza (`policy_type`), guardadas en `kb_documents`/`kb_chunks.metadata`. `search_kb` **filtra por taxonomía** (param `p_filter jsonb`, migración 0043).
+- **Bucket privado** `knowledge-files` (migración 0044): guarda el binario original (preview/descarga vía signed URL). Estados de procesamiento + **re-etiquetado sin re-procesar** (RPC `retag_kb_document`, migración 0045).
+
+### Precios Diarios (módulo nuevo → `(dashboard)/precios-diarios`)
+- Tablas `cotizaciones_diarias` / `daily_plan_catalog` (con columna `subcategoria` GENERATED) / `daily_prices` (migración 0046). 8 subcategorías × 10 rangos de edad = 80 cotizaciones/día.
+- `daily-price-sync`: scraper del cotizador externo `mspeed.yoestoyasegurado.co` (sin IA). `extract-prices`: lee los PDFs y extrae precios con **Claude vision + `output_config` json_schema** (`EXTRACT_PRICES_MODEL` default `claude-haiku-4-5`). Crons `*/10` parametrizados (migración 0047; bearer vía setting de DB, no en SQL; ambas `verify_jwt=false`).
+- Route handlers `/api/precios/{precios,cotizaciones,sync,extract}` + item en el nav.
+
+### Tools de precios del agente
+- `buscar_precios_seguros` (tool http → RPC PostgREST `buscar_precios_seguros`, migración 0048/0049): precios del día por subcategoría+rango **con `id_plan`** (join a `daily_plan_catalog`).
+- `generar_cotizacion` (tool http → Edge Function `generar-cotizacion`, migración 0049): genera la **cotización OFICIAL en PDF** vía `cotizar.php` (titular + beneficiarios + planes; calcula `fecha_nacimiento` desde la edad). Replica la tool `apidaniel` del flujo n8n; devuelve `pdf_url`.
+
+### Poda (migración 0050)
+- Shopify deshabilitado (`buscar_producto`/`consultar_pedido`/`crear_link_pago`/`ver_categorias` → `enabled=false`). **BCV (`tasa_bcv`) y las tools CRM de Kommo se mantienen.**
+- RLS endurecido: las 3 tablas de precios quedan solo con policy `authenticated` (quitadas las `anon`/public legacy de LAM).
+
+### Estado del corte (cutover)
+Convive en paralelo con el flujo **n8n legacy**: ambos webhooks de Kommo escuchan `add_message`. El sistema nuevo corre en **modo sombra** (`agent_enabled=true`, `publishing_enabled=false`) → Valentina clasifica y redacta pero **no responde** en Kommo. El corte final = apagar el webhook de n8n + `publishing_enabled=true` + **rotar la anon key expuesta** (estuvo hardcodeada en el SPA/SQL de LAM).
 
 ## Desplegar un cliente nuevo (zero-CLI — todo desde el navegador)
 
@@ -95,8 +123,8 @@ Resiliencia: `pg_cron` barre cada minuto `process-inbound`, `generate-response`,
   - **leads** (read-write, por lead): `/<lead_id>/conversation.md` + `learnings.md`.
 - En el código (web + edge) usamos los labels semánticos `"master"` y `"leads"` para no acoplar el schema a un nombre específico de store. El ID real viene de `ANTHROPIC_MEMORY_MASTER_ID` / `_LEADS_ID`.
 - **Dreams**: `dreams-run` analiza conversaciones (24h/7d), Sonnet destila learnings y los escribe como `.md` en `<master>/dreams/`. El system prompt del agente obliga a leer `/dreams/` con **prioridad mayor que la voz base** antes de redactar. No es reentrenamiento: es retrieval en vivo. Cada learning lleva `severity` (sugerencia|advertencia|error, codificada también en el filename como `sug|adv|err`) y la política `runtime_config.DREAMS_AUTO_ACTIVATE` decide qué se activa solo: `all` (default), `error` (solo errores se auto-activan = autocorrección; el resto espera aprobación) o `none`. Lo no activado va a `/dreams-pending/` (el agente NO lo lee) y se aprueba/descarta desde `/dreams`. Todo dream `error` genera una alerta (`kind=dream_error`). El dashboard permite borrar activos (borra el archivo del Memory Store → el agente deja de adoptarlo).
-- **Audio (notas de voz)**: si `respond_to_audio=true` y hay `OPENAI_API_KEY` en `runtime_config`, `process-inbound` transcribe con Whisper (`whisper-1`) y el texto sigue el pipeline normal (se guarda como `🎙️ <transcript>`). Sin key → `media_audio_no_key`; transcripción fallida → `requires_human_review`. La key se pide al activar el toggle en `/agent` → Filtros → Multimedia.
-- `search_kb` es un custom tool del agente: embeddings gte-small 384d (`embed` function) + RPC `search_kb` (vector 0.7 + FTS español 0.3).
+- **Audio (notas de voz)**: el template lo transcribe con Whisper (`whisper-1`) si `respond_to_audio=true` y hay `OPENAI_API_KEY`. **En Seguros LAM el audio está APAGADO** (`respond_to_audio=false`) y **no hay `OPENAI_API_KEY`** — el sistema es 100% sin OpenAI. Si se quisiera audio, habría que cambiar Whisper por un STT no-OpenAI (Groq/Deepgram/Gemini).
+- `search_kb` es un custom tool del agente: embeddings gte-small 384d (`embed` function) + RPC `search_kb` (vector 0.7 + FTS español 0.3) **+ filtro opcional por metadata `collection`/`policy_type`** (taxonomía aseguradora/tipo de póliza — específico de Seguros LAM, migración 0043). Junto a él, las tools de precios `buscar_precios_seguros` y `generar_cotizacion` (ver sección Seguros LAM).
 - Captura de mensajes salientes manuales de Kommo: **no resuelto**. El webhook `leads.add` no trae texto; los mensajes tecleados a mano viven en el sistema de chat de Kommo (amojo, credenciales aparte). Lo único recuperable vía API es lo que pasa por el custom field configurado (eventos `/api/v4/events`).
 
 ### System prompt del agente
