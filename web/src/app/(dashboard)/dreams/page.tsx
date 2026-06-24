@@ -6,6 +6,7 @@ import DeleteDreamButton from "./delete-button";
 import ExportImportButtons from "./export-import";
 import PendingDreamActions from "./pending-actions";
 import PolicySelector from "./policy-selector";
+import ScheduleSelector from "./schedule-selector";
 
 export const dynamic = "force-dynamic";
 
@@ -103,6 +104,8 @@ export default async function DreamsPage({ searchParams }: { searchParams: Searc
   }
 
   const policy = (await configValue("DREAMS_AUTO_ACTIVATE")) || "all";
+  const dreamsEnabled = (await configValue("DREAMS_ENABLED")) !== "false";
+  const dreamsEveryDays = parseInt((await configValue("DREAMS_EVERY_DAYS")) || "1", 10) || 1;
 
   const parsedItems = items.map((it) => parseDreamPath(it.id, it.path));
   const parsedPending = pendingItems.map((it) => parseDreamPath(it.id, it.path));
@@ -120,7 +123,7 @@ export default async function DreamsPage({ searchParams }: { searchParams: Searc
   return (
     <PageShell
       title="Dreams"
-      description="Aprendizajes destilados de conversaciones. Análisis: diario 3 AM UTC, semanal domingos 3 AM UTC."
+      description="Aprendizajes destilados de conversaciones. El análisis automático corre según la frecuencia que elijas (o apágalo y córrelo manualmente)."
       actions={
         <div className="flex flex-wrap items-center gap-2">
           {/* Acciones primarias: Run */}
@@ -134,6 +137,7 @@ export default async function DreamsPage({ searchParams }: { searchParams: Searc
               <ExportImportButtons />
             </div>
           </details>
+          <ScheduleSelector enabled={dreamsEnabled} everyDays={dreamsEveryDays} />
           <PolicySelector initial={policy} />
         </div>
       }

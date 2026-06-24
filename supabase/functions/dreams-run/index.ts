@@ -394,7 +394,7 @@ Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
-  let body: { period?: string } = {};
+  let body: { period?: string; force?: boolean } = {};
   try {
     const text = await req.text();
     if (text) body = JSON.parse(text);
@@ -402,10 +402,36 @@ Deno.serve(async (req: Request) => {
     // ignore
   }
   const period = (body.period === "weekly" ? "weekly" : "daily") as Period;
+  // El run manual (botón en /dreams) fuerza la corrida e ignora la programación.
+  const force = body.force === true;
 
   try {
     // Resolve config at request time: DB-first, then env fallback.
     const cfg = await loadConfig(supabase);
+
+    // ── Programación (solo aplica a corridas automáticas del cron) ───────────
+    // DREAMS_ENABLED = "false" apaga el aprendizaje automático por completo.
+    // DREAMS_EVERY_DAYS controla cada cuántos días corre el análisis diario.
+    if (!force) {
+      if (cfg.getOr("DREAMS_ENABLED", "true") === "false") {
+        return new Response(JSON.stringify({ ok: true, skipped: "disabled" }), {
+          status: 200, headers: { "content-type": "application/json" },
+        });
+      }
+      if (period === "daily") {
+        const everyDays = Math.max(1, parseInt(cfg.getOr("DREAMS_EVERY_DAYS", "1"), 10) || 1);
+        const last = cfg.get("DREAMS_LAST_RUN");
+        if (last) {
+          const days = (Date.now() - new Date(last).getTime()) / 86_400_000;
+          if (days < everyDays - 0.5) {
+            return new Response(JSON.stringify({ ok: true, skipped: "not_due", everyDays, lastRun: last }), {
+              status: 200, headers: { "content-type": "application/json" },
+            });
+          }
+        }
+      }
+    }
+
     const anthropic = new Anthropic({ apiKey: cfg.require("ANTHROPIC_API_KEY") });
     const memstoreMaster = cfg.require("ANTHROPIC_MEMORY_MASTER_ID");
     const operator = cfg.getOr("OPERATOR_NAME", "el operador");
@@ -414,6 +440,15 @@ Deno.serve(async (req: Request) => {
       rawPolicy === "error" || rawPolicy === "none" ? rawPolicy : "all";
 
     const result = await runDreams(period, anthropic, memstoreMaster, operator, policy, cfg);
+
+    // Marca de última corrida diaria → ancla la cadencia de DREAMS_EVERY_DAYS.
+    if (period === "daily") {
+      await supabase.from("runtime_config").upsert(
+        { key: "DREAMS_LAST_RUN", value: new Date().toISOString(), updated_by: "dreams-run", updated_at: new Date().toISOString() },
+        { onConflict: "key" }
+      );
+    }
+
     return new Response(JSON.stringify({ ok: true, period, ...result }), {
       status: 200,
       headers: { "content-type": "application/json" },
