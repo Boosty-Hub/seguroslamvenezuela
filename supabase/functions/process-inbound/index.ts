@@ -870,7 +870,9 @@ async function processPayload(payload: KommoPayload, anthropic: Anthropic, opera
             requires_human_review: needsReview,
           })
           .eq("id", msg.id);
-        if (!needsReview && v?.id) inboundMessageIds.push(msg.id);
+        // El agente SIEMPRE redacta (incluso si requires_human_review): ese flag
+        // decide después si el draft queda pending (aprobación) o se auto-publica.
+        if (v?.id) inboundMessageIds.push(msg.id);
         // Captura fail-open de consumo classify
         await recordUsage(supabase, {
           component: "classify", model: classifyModel,

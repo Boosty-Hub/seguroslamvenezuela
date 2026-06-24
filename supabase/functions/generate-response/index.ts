@@ -726,8 +726,9 @@ async function pickLeadBatch(
     }
   }
 
-  // Con bypass, también tomamos los mensajes en review humana (el agente
-  // responde y publica todo). Sin bypass, solo los no marcados.
+  // El agente SIEMPRE redacta, incluso para mensajes con requires_human_review:
+  // ese flag decide el ESTADO del draft (pending = necesita aprobación) más
+  // abajo, NO si se responde. Por eso ya no se filtra por requires_human_review.
   let q = supabase
     .from("messages")
     .select(MSG_SELECT)
@@ -735,7 +736,6 @@ async function pickLeadBatch(
     .not("vertical_id", "is", null)
     .is("answered_by_draft_id", null)
     .eq("ignored", false);
-  if (!bypass) q = q.eq("requires_human_review", false);
   // Ventana de frescura: solo atender mensajes recientes. Lo más viejo que la
   // ventana NO se responde (lo manejan los asesores) → no arrastra backlog.
   if (maxAgeHours > 0) {
@@ -1441,16 +1441,17 @@ Deno.serve(async (req: Request) => {
         }
       }
 
-      // forceReview (revisión humana) → siempre pending para que el humano
-      // apruebe/edite. bypass → siempre approved (publica todo, ignora review).
-      // Resto → lógica normal por vertical.
+      // requires_human_review es EL decisor de aprobación: si CUALQUIER mensaje
+      // del batch viene marcado, el agente igual respondió pero el draft queda
+      // pending (aprobación humana). bypass publica todo; forceReview = pending.
+      const batchNeedsReview = batchMsgs.some((m: MsgRow) => m.requires_human_review === true);
       const status = forceReview
         ? "pending"
         : bypass
         ? "approved"
-        : vertical.auto_reply && !vertical.requires_review
-        ? "approved"
-        : "pending";
+        : batchNeedsReview
+        ? "pending"
+        : "approved";
 
       await supabase
         .from("drafts")
