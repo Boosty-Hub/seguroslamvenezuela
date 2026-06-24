@@ -1,5 +1,11 @@
 {
   "name": "kommo-claude-agent-template",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --dir web dev",
+    "build": "pnpm --dir web build",
+    "start": "pnpm --dir web start",
+    "lint": "pnpm --dir web lint"
+  }
 }
