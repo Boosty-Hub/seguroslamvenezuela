@@ -444,3 +444,7 @@ verify_jwt = false
 
 [functions.extract-prices]
 verify_jwt = false
+
+# Generador de cotizacion oficial (cotizar.php): lo invoca el agente como tool http.
+[functions.generar-cotizacion]
+verify_jwt = false
