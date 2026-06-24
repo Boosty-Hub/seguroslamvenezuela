@@ -84,6 +84,8 @@ export default async function InboxPage({
     last_message_at: string | null;
     lastMsg: { content: string; direction: string; vertical: string | null; requires_review: boolean; created_at: string } | null;
     hasReviewPending: boolean;
+    needsAttention: boolean;
+    attentionReason: string;
     verticals: string[];
     maxUrgency: number;
     maxToxicity: number;
@@ -111,6 +113,17 @@ export default async function InboxPage({
       maxUrgency = Math.max(maxUrgency, Number(cls.urgency ?? 0) || 0);
       maxToxicity = Math.max(maxToxicity, Number(cls.toxicity ?? 0) || 0);
     }
+    // El agente NO respondió / no responderá automáticamente: o quedó marcada
+    // para revisión humana (hostil, requiere persona, etc.) o el último mensaje
+    // del lead es tóxico. Estas conversaciones llevan la alerta animada.
+    const hasReviewPending = sorted.some(
+      (m) => m.direction === "inbound" && m.requires_human_review
+    );
+    const isHostile = maxToxicity > 0.3;
+    const needsAttention = hasReviewPending || isHostile;
+    const attentionReason = hasReviewPending
+      ? "El agente no respondió: requiere revisión humana"
+      : "Mensaje hostil / tóxico — revísalo";
     return {
       id: l.id,
       display_name: l.display_name,
@@ -127,7 +140,9 @@ export default async function InboxPage({
             created_at: last.created_at,
           }
         : null,
-      hasReviewPending: sorted.some((m) => m.direction === "inbound" && m.requires_human_review),
+      hasReviewPending,
+      needsAttention,
+      attentionReason,
       verticals,
       maxUrgency,
       maxToxicity,
@@ -420,11 +435,27 @@ export default async function InboxPage({
                         }
                       >
                         <div className="flex items-start gap-3">
-                          <div className={
-                            "flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold " +
-                            (active ? "bg-brand text-brand-foreground" : "bg-neutral-100 text-neutral-600")
-                          }>
-                            {initials(name)}
+                          <div className="relative shrink-0">
+                            <div className={
+                              "flex h-9 w-9 items-center justify-center rounded-full text-[11px] font-semibold " +
+                              (active ? "bg-brand text-brand-foreground" : "bg-neutral-100 text-neutral-600")
+                            }>
+                              {initials(name)}
+                            </div>
+                            {l.needsAttention && (
+                              <span
+                                className="absolute -right-1.5 -top-1.5 inline-flex h-[18px] w-[18px] items-center justify-center"
+                                title={l.attentionReason}
+                                aria-label={l.attentionReason}
+                              >
+                                {/* "luz" pulsante de alerta */}
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                                {/* triángulo de alerta */}
+                                <span className="relative inline-flex h-[18px] w-[18px] items-center justify-center rounded-full bg-red-500 text-white shadow-sm ring-2 ring-white">
+                                  <Alert size={11} className="text-white" />
+                                </span>
+                              </span>
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-baseline justify-between gap-2">
@@ -450,6 +481,7 @@ export default async function InboxPage({
                               )}
                               {l.lastMsg?.vertical && <Badge color="blue">{l.lastMsg.vertical}</Badge>}
                               {l.hasReviewPending && <Badge color="amber">revisión</Badge>}
+                              {!l.hasReviewPending && l.maxToxicity > 0.3 && <Badge color="red">hostil</Badge>}
                             </div>
                           </div>
                         </div>
