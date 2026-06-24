@@ -19,7 +19,7 @@ export default async function ContenidoPage({
       .order("created_at", { ascending: false }),
     supabase
       .from("kb_documents")
-      .select("id, title, source_type, total_chunks, created_at")
+      .select("id, title, source_type, total_chunks, created_at, collection, policy_type, status, storage_path")
       .order("created_at", { ascending: false }),
     supabase
       .from("promotions")
@@ -44,6 +44,10 @@ export default async function ContenidoPage({
     sourceType: d.source_type as string,
     totalChunks: (d.total_chunks as number) ?? 0,
     createdAt: d.created_at as string,
+    collection: (d.collection as string | null) ?? null,
+    policyType: (d.policy_type as string | null) ?? null,
+    status: (d.status as string | null) ?? null,
+    hasOriginal: Boolean(d.storage_path),
   }));
 
   const promos = (rawPromos ?? []) as Promo[];

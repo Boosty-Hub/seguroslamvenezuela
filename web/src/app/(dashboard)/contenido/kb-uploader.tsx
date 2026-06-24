@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import TaxonomySelects from "@/components/knowledge/taxonomy-selects";
 
 export default function KBUploader() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [content, setContent] = useState("");
+  const [collection, setCollection] = useState("");
+  const [policyType, setPolicyType] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +28,8 @@ export default function KBUploader() {
     form.set("title", title);
     if (file) form.set("file", file);
     if (content.trim()) form.set("content", content);
+    if (collection) form.set("collection", collection);
+    if (policyType) form.set("policy_type", policyType);
 
     const res = await fetch("/api/kb/ingest", { method: "POST", body: form });
     const json = await res.json();
@@ -48,7 +53,8 @@ export default function KBUploader() {
       className="space-y-5 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm"
     >
       <p className="text-xs text-neutral-500">
-        Sube cursos, documentos, FAQs. Acepta PDF, DOCX, TXT, MD, SRT, VTT. Cada chunk se vectoriza con{" "}
+        Sube pólizas, condicionados, tarifarios, FAQs. Acepta PDF, DOCX, TXT, MD, SRT, VTT, XLSX/CSV e{" "}
+        imágenes (con OCR vía Claude para imágenes y PDF escaneado). Cada chunk se vectoriza con{" "}
         <span className="rounded bg-neutral-100 px-1 py-0.5 font-mono text-[11px] text-neutral-700">gte-small</span>{" "}
         (384 dims) vía Supabase AI.
       </p>
@@ -59,10 +65,21 @@ export default function KBUploader() {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder='Ej: "Curso IA Foundations — Módulo 4"'
+          placeholder='Ej: "Condicionado HCM Oro — Seguros Caracas"'
           className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:ring-1 focus:ring-neutral-900 focus:outline-none"
         />
       </div>
+
+      {/* Taxonomía: aseguradora + tipo de póliza */}
+      <TaxonomySelects
+        collection={collection}
+        policyType={policyType}
+        onChange={({ collection, policyType }) => {
+          setCollection(collection);
+          setPolicyType(policyType);
+        }}
+        idPrefix="upload"
+      />
 
       <div className="space-y-2">
         <label className="text-sm font-medium text-neutral-700">Archivo</label>
@@ -106,18 +123,18 @@ export default function KBUploader() {
               <span className="text-sm font-medium text-neutral-700">
                 Arrastra un archivo o haz clic para seleccionar
               </span>
-              <span className="text-xs text-neutral-400">PDF, DOCX, TXT, MD, SRT, VTT</span>
+              <span className="text-xs text-neutral-400">PDF, DOCX, XLSX, CSV, TXT, MD, SRT, VTT, imágenes</span>
             </>
           )}
           <input
             id="kb-file"
             type="file"
-            accept=".pdf,.docx,.txt,.md,.srt,.vtt"
+            accept=".pdf,.docx,.txt,.md,.srt,.vtt,.xlsx,.xls,.csv,.png,.jpg,.jpeg,.webp,.gif"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="sr-only"
           />
         </label>
-        <p className="text-xs text-neutral-400">Máx 5 MB. Transcripciones largas: usar TXT o SRT.</p>
+        <p className="text-xs text-neutral-400">Máx 50 MB. El binario original se guarda en el bucket privado.</p>
       </div>
 
       <div className="space-y-2">

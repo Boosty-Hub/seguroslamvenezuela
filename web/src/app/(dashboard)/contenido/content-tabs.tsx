@@ -28,6 +28,10 @@ type KBDocument = {
   sourceType: string;
   totalChunks: number;
   createdAt: string;
+  collection: string | null;
+  policyType: string | null;
+  status: string | null;
+  hasOriginal: boolean;
 };
 
 export default function ContentTabs({
@@ -179,7 +183,8 @@ export default function ContentTabs({
                     <thead className="sticky top-0 bg-neutral-50/60 text-left">
                       <tr>
                         <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Formato</th>
-                        <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Título</th>
+                        <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Título / etiquetas</th>
+                        <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Estado</th>
                         <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Chunks</th>
                         <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400">Subido</th>
                         <th scope="col" className="px-4 py-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-400 text-right">Acciones</th>
@@ -194,6 +199,10 @@ export default function ContentTabs({
                           sourceType={d.sourceType}
                           totalChunks={d.totalChunks}
                           createdAt={d.createdAt}
+                          collection={d.collection}
+                          policyType={d.policyType}
+                          status={d.status}
+                          hasOriginal={d.hasOriginal}
                         />
                       ))}
                     </tbody>
