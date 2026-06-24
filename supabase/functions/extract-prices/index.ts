@@ -1,4 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Anthropic from "npm:@anthropic-ai/sdk@0.95.1";
+import { loadConfig } from "../_shared/config.ts";
+import { recordUsage } from "../_shared/usage.ts";
 
 const BATCH_SIZE = 10;
 
@@ -21,20 +24,28 @@ interface PriceRow {
   prima_trimestral: number;
 }
 
-// ── AI PDF EXTRACTOR ──────────────────────────────────────────────────────────
+const ASEGURADORAS = [
+  "MERCANTIL SEGUROS", "SEGUROS CARACAS", "SEGUROS UNIVERSITAS",
+  "ESTAR SEGUROS", "LA INTERNACIONAL DE SEGUROS", "SEGUROS VENEZUELA",
+];
 
+// ── EXTRACTOR PDF con Claude vision ───────────────────────────────────────────
+
+// deno-lint-ignore no-explicit-any
 async function extractPricesFromPDF(
   pdfUrl: string,
   subcategoria: string,
   catalogoTexto: string,
-  openaiKey: string
+  anthropic: Anthropic,
+  model: string,
+  // deno-lint-ignore no-explicit-any
+  supabase: any,
 ): Promise<PriceRow[]> {
   const resp = await fetch(pdfUrl);
   if (!resp.ok) throw new Error(`PDF download failed: ${resp.status}`);
 
   const pdfBytes = new Uint8Array(await resp.arrayBuffer());
-
-  // Convert Uint8Array to base64 in chunks to avoid stack overflow
+  // base64 en trozos de 8192 (evita stack overflow)
   const CHUNK = 8192;
   let binary = "";
   for (let i = 0; i < pdfBytes.length; i += CHUNK) {
@@ -65,45 +76,65 @@ Reglas:
 
 Responde ÚNICAMENTE con JSON válido: {"planes": [...]}`;
 
-  const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${openaiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "file",
-              file: {
-                filename: "cotizacion.pdf",
-                file_data: `data:application/pdf;base64,${base64}`,
+  const res = await anthropic.messages.create({
+    model,
+    max_tokens: 2000,
+    messages: [{
+      role: "user",
+      content: [
+        { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } },
+        { type: "text", text: prompt },
+      ],
+    }],
+    // deno-lint-ignore no-explicit-any
+    output_config: {
+      format: {
+        type: "json_schema",
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            planes: {
+              type: "array",
+              items: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  nombre_plan:      { type: "string" },
+                  aseguradora:      { type: "string", enum: ASEGURADORAS },
+                  suma_asegurada:   { type: "number" },
+                  prima_anual:      { type: "number" },
+                  prima_mensual:    { type: "number" },
+                  prima_semestral:  { type: "number" },
+                  prima_trimestral: { type: "number" },
+                },
+                required: ["nombre_plan", "aseguradora", "suma_asegurada", "prima_anual", "prima_mensual", "prima_semestral", "prima_trimestral"],
               },
             },
-            { type: "text", text: prompt },
-          ],
+          },
+          required: ["planes"],
         },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0,
-      max_tokens: 2000,
-    }),
-  });
+      },
+    },
+    // deno-lint-ignore no-explicit-any
+  } as any);
 
-  if (!aiResp.ok) {
-    const errText = await aiResp.text();
-    throw new Error(`OpenAI error ${aiResp.status}: ${errText}`);
-  }
+  // Registro de consumo (no bloquea la extracción si falla)
+  try {
+    await recordUsage(supabase, {
+      component: "extract-prices",
+      model,
+      inputTokens: res.usage?.input_tokens,
+      outputTokens: res.usage?.output_tokens,
+    });
+  } catch (_) { /* ignore */ }
 
-  const aiJson = await aiResp.json();
-  const content = aiJson.choices?.[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(content);
+  const block = res.content.find((b) => b.type === "text");
+  if (!block || block.type !== "text") throw new Error("extract-prices: sin bloque de texto en la respuesta");
+  const parsed = JSON.parse(block.text);
 
   const planes = parsed.planes ?? [];
+  // deno-lint-ignore no-explicit-any
   return planes.map((p: any) => ({
     nombre_plan:      String(p.nombre_plan ?? "").trim(),
     aseguradora:      String(p.aseguradora ?? "").trim(),
@@ -122,11 +153,15 @@ Deno.serve(async (_req) => {
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const openaiKey = Deno.env.get("OPENAI_API_KEY") ?? "";
 
-  const body = await _req.text().then(t => t ? JSON.parse(t) : {}).catch(() => ({}));
+  const cfg = await loadConfig(supabase);
+  const apiKey = cfg.require("ANTHROPIC_API_KEY");
+  const model = cfg.getOr("EXTRACT_PRICES_MODEL", "claude-haiku-4-5");
+  const anthropic = new Anthropic({ apiKey });
+
+  const body = await _req.text().then((t) => (t ? JSON.parse(t) : {})).catch(() => ({}));
   const fechaTarget: string = body.fecha ?? new Date().toISOString().split("T")[0];
   const force: boolean = body.force === true;
 
@@ -146,21 +181,19 @@ Deno.serve(async (_req) => {
     .select("subcategoria, rango_edad")
     .eq("fecha", fechaTarget);
 
-  const yaSet = new Set(
-    (yaExtraidos ?? []).map((r: any) => `${r.subcategoria}__${r.rango_edad}`)
-  );
-  const pendientes = (cotizaciones ?? []).filter(
-    (c: any) => !yaSet.has(`${c.categoria}__${c.rango_edad}`)
-  );
+  // deno-lint-ignore no-explicit-any
+  const yaSet = new Set((yaExtraidos ?? []).map((r: any) => `${r.subcategoria}__${r.rango_edad}`));
+  // deno-lint-ignore no-explicit-any
+  const pendientes = (cotizaciones ?? []).filter((c: any) => !yaSet.has(`${c.categoria}__${c.rango_edad}`));
 
   if (pendientes.length === 0) {
     return new Response(
       JSON.stringify({ message: "Precios ya extraídos", fecha: fechaTarget, total: yaSet.size }),
-      { headers: { "Content-Type": "application/json", ...CORS } }
+      { headers: { "Content-Type": "application/json", ...CORS } },
     );
   }
 
-  // Load plan catalog for the date — used as ground truth for plan→aseguradora mapping
+  // Catálogo del día → fuente de verdad para plan→aseguradora
   const { data: catalogo } = await supabase
     .from("daily_plan_catalog")
     .select("nombre_aseguradora, nombre_plan, suma_asegurada")
@@ -169,6 +202,7 @@ Deno.serve(async (_req) => {
     .order("nombre_plan");
 
   const porAseguradora: Record<string, string[]> = {};
+  // deno-lint-ignore no-explicit-any
   for (const p of (catalogo ?? []) as any[]) {
     const a = p.nombre_aseguradora;
     if (!porAseguradora[a]) porAseguradora[a] = [];
@@ -176,22 +210,23 @@ Deno.serve(async (_req) => {
     if (!porAseguradora[a].includes(linea)) porAseguradora[a].push(linea);
   }
   const catalogoTexto = Object.entries(porAseguradora)
-    .map(([aseg, planes]) => `${aseg}:\n${planes.map(p => `  - ${p}`).join("\n")}`)
+    .map(([aseg, planes]) => `${aseg}:\n${planes.map((p) => `  - ${p}`).join("\n")}`)
     .join("\n\n");
 
   const batch = pendientes.slice(0, BATCH_SIZE);
+  // deno-lint-ignore no-explicit-any
   const resultados: Record<string, any> = {};
   let extraidos = 0;
 
+  // deno-lint-ignore no-explicit-any
   await Promise.all((batch as any[]).map(async (cot) => {
     const key = `${cot.categoria}__${cot.rango_edad}`;
     try {
-      const priceRows = await extractPricesFromPDF(cot.pdf_url, cot.categoria, catalogoTexto, openaiKey);
+      const priceRows = await extractPricesFromPDF(cot.pdf_url, cot.categoria, catalogoTexto, anthropic, model, supabase);
 
       if (priceRows.length > 0) {
-        // Deduplicate by unique key to avoid ON CONFLICT duplicates within batch
         const seen = new Set<string>();
-        const uniqueRows = priceRows.filter(r => {
+        const uniqueRows = priceRows.filter((r) => {
           const k = `${r.nombre_plan}__${r.suma_asegurada}`;
           if (seen.has(k)) return false;
           seen.add(k);
@@ -199,7 +234,7 @@ Deno.serve(async (_req) => {
         });
 
         const { error: insErr } = await supabase.from("daily_prices").upsert(
-          uniqueRows.map(r => ({
+          uniqueRows.map((r) => ({
             fecha:            fechaTarget,
             subcategoria:     cot.categoria,
             rango_edad:       cot.rango_edad,
@@ -211,19 +246,16 @@ Deno.serve(async (_req) => {
             prima_semestral:  r.prima_semestral,
             prima_trimestral: r.prima_trimestral,
           })),
-          { onConflict: "fecha,subcategoria,rango_edad,nombre_plan,suma_asegurada", ignoreDuplicates: false }
+          { onConflict: "fecha,subcategoria,rango_edad,nombre_plan,suma_asegurada", ignoreDuplicates: false },
         );
 
         if (!insErr) extraidos++;
         else resultados[key + "_err"] = insErr.message;
       }
 
-      const displayRows = priceRows.length > 0
-        ? (() => { const s = new Set<string>(); return priceRows.filter(r => { const k = `${r.nombre_plan}__${r.suma_asegurada}`; if (s.has(k)) return false; s.add(k); return true; }); })()
-        : priceRows;
       resultados[key] = {
-        precios: displayRows.length,
-        planes: displayRows.map(r => `${r.aseguradora} | ${r.nombre_plan} | $${r.suma_asegurada}`),
+        precios: priceRows.length,
+        planes: priceRows.map((r) => `${r.aseguradora} | ${r.nombre_plan} | $${r.suma_asegurada}`),
       };
     } catch (err) {
       resultados[key] = { error: err instanceof Error ? err.message : String(err) };
@@ -231,13 +263,7 @@ Deno.serve(async (_req) => {
   }));
 
   return new Response(
-    JSON.stringify({
-      success: true,
-      fecha: fechaTarget,
-      extraidos,
-      pendientes: pendientes.length - batch.length,
-      resultados,
-    }),
-    { headers: { "Content-Type": "application/json", ...CORS } }
+    JSON.stringify({ success: true, fecha: fechaTarget, extraidos, pendientes: pendientes.length - batch.length, resultados }),
+    { headers: { "Content-Type": "application/json", ...CORS } },
   );
 });
