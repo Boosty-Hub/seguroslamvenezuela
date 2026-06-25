@@ -643,6 +643,18 @@ async function processPayload(payload: KommoPayload, anthropic: Anthropic, opera
     }
   }
 
+  // 1b) leads.update: refrescar la etapa (kommo_stage_id) cuando cambia en Kommo
+  // (cambio manual de etapa por un humano). Mantiene fresca la fuente usada por
+  // el gate de etapas (lista blanca/negra) sin tener que consultar Kommo en vivo.
+  if (payload.leads?.update) {
+    for (const l of payload.leads.update) {
+      const id = Number(l.id);
+      const stageId = l.status_id ? Number(l.status_id) : undefined;
+      if (!Number.isFinite(id) || stageId === undefined || !Number.isFinite(stageId)) continue;
+      await supabase.from("leads").update({ kommo_stage_id: stageId }).eq("kommo_lead_id", id);
+    }
+  }
+
   // 2) Procesar messages
   if (payload.message?.add) {
     for (const m of payload.message.add) {

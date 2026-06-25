@@ -15,6 +15,7 @@ import {
   patchLeadField,
   patchContactField,
   moveLeadStage,
+  fetchLeadStage,
   fetchPipelineStages,
   fetchEntityFields,
   type KommoStageLite,
@@ -319,6 +320,16 @@ async function runCrmTool(
     if (matches.length === 0) {
       const opciones = stages.map((s) => `"${s.name}" (pipeline "${s.pipelineName}")`).join(", ");
       return `No encontré una etapa llamada "${stageName}". Etapas disponibles: ${opciones || "(ninguna)"}.`;
+    }
+    // Si la etapa existe en varios pipelines y no se especificó cuál, desambiguar
+    // por el pipeline ACTUAL del lead (mover dentro de su mismo embudo). Así el
+    // handoff a "VIENE DEL AGENTE IA (ATENDER)" funciona sin que el agente sepa el pipeline.
+    if (matches.length > 1 && !pipelineName && ctx.currentKommoStageId != null) {
+      const cur = stages.find((s) => s.id === ctx.currentKommoStageId);
+      if (cur) {
+        const sameP = matches.filter((s) => s.pipelineId === cur.pipelineId);
+        if (sameP.length === 1) matches = sameP;
+      }
     }
     if (matches.length > 1) {
       const opciones = matches.map((s) => `pipeline "${s.pipelineName}"`).join(", ");
@@ -660,7 +671,9 @@ async function pickLeadBatch(
   throttle?: Throttle,
   ignoredStageIds?: number[],
   debounceMs: number = DEBOUNCE_MS,
-  maxAgeHours = 0
+  maxAgeHours = 0,
+  respondingStageIds?: number[],
+  kommoCreds?: { domain: string; token: string }
 ): Promise<Batch | null> {
   // --- Camino revisión humana: responder ESE mensaje + pendientes del lead ---
   // Es un override humano explícito (botón de revisión): si alguien pide
@@ -781,16 +794,36 @@ async function pickLeadBatch(
       .maybeSingle();
     const lastTs = lastIn ? new Date(lastIn.created_at as string).getTime() : 0;
     if (now - lastTs < debounceMs) continue;
-    // Etapa ignorada: si el lead está en una etapa silenciada de Kommo, el
-    // agente no atiende. Stage null = atiende (igual que el gate de follow-up).
-    if (ignoredStageIds && ignoredStageIds.length > 0) {
+    // Gate por etapa de Kommo: LISTA BLANCA (responder SOLO en estas etapas) y
+    // LISTA NEGRA (nunca en estas). La lista blanca tiene prioridad. Si hay lista
+    // blanca y la etapa persistida es desconocida, se consulta Kommo en vivo
+    // (autoritativo) para no responder fuera de las etapas permitidas.
+    if ((respondingStageIds && respondingStageIds.length > 0) ||
+        (ignoredStageIds && ignoredStageIds.length > 0)) {
       const { data: ld } = await supabase
         .from("leads")
-        .select("kommo_stage_id")
+        .select("kommo_stage_id, kommo_lead_id")
         .eq("id", leadId)
         .maybeSingle();
-      const stage = ld?.kommo_stage_id;
-      if (stage != null && ignoredStageIds.includes(Number(stage))) continue;
+      let stage = ld?.kommo_stage_id != null ? Number(ld.kommo_stage_id) : null;
+
+      if (stage == null && respondingStageIds && respondingStageIds.length > 0 &&
+          kommoCreds && ld?.kommo_lead_id != null) {
+        try {
+          const live = await fetchLeadStage(Number(ld.kommo_lead_id), kommoCreds.domain, kommoCreds.token);
+          if (Number.isFinite(live.statusId)) {
+            stage = live.statusId;
+            await supabase.from("leads").update({ kommo_stage_id: stage }).eq("id", leadId);
+          }
+        } catch { /* fail-open: si no se puede confirmar, no bloquear */ }
+      }
+
+      if (stage != null) {
+        // Lista blanca: si está configurada y la etapa NO está en ella → no responder.
+        if (respondingStageIds && respondingStageIds.length > 0 && !respondingStageIds.includes(stage)) continue;
+        // Lista negra: si la etapa está silenciada → no responder.
+        if (ignoredStageIds && ignoredStageIds.length > 0 && ignoredStageIds.includes(stage)) continue;
+      }
     }
     // Cooldown / tope por lead: si este lead está silenciado, lo SALTAMOS y
     // seguimos con el próximo (no cortamos la cola — eso mataría de hambre a los
@@ -1156,7 +1189,7 @@ Deno.serve(async (req: Request) => {
   const { data: cfg } = await supabase
     .from("kommo_publish_config")
     .select(
-      "agent_enabled, bypass_review, publishing_enabled, response_cooldown_seconds, max_responses_per_lead, cooldown_window_hours, ignored_stage_ids, response_debounce_seconds, answer_max_age_hours, crm_actions_enabled, crm_can_move_stage, crm_can_update_lead, crm_can_update_contact, shopify_actions_enabled, shopify_can_search, shopify_can_orders, shopify_can_checkout, bcv_rate_enabled, comment_instructions, comment_reply_enabled, comment_reply_rules"
+      "agent_enabled, bypass_review, publishing_enabled, response_cooldown_seconds, max_responses_per_lead, cooldown_window_hours, ignored_stage_ids, responding_stage_ids, response_debounce_seconds, answer_max_age_hours, crm_actions_enabled, crm_can_move_stage, crm_can_update_lead, crm_can_update_contact, shopify_actions_enabled, shopify_can_search, shopify_can_orders, shopify_can_checkout, bcv_rate_enabled, comment_instructions, comment_reply_enabled, comment_reply_rules"
     )
     .eq("is_active", true)
     .maybeSingle();
@@ -1205,6 +1238,22 @@ Deno.serve(async (req: Request) => {
     ? undefined
     : (((cfg?.ignored_stage_ids ?? []) as unknown[]).map(Number).filter((n) => Number.isFinite(n)));
 
+  // Lista BLANCA de etapas: si está configurada, el agente responde SOLO cuando
+  // el lead está en una de estas etapas (no aplica a revisión humana explícita).
+  const respondingStageIds: number[] | undefined = forceReview
+    ? undefined
+    : (((cfg?.responding_stage_ids ?? []) as unknown[]).map(Number).filter((n) => Number.isFinite(n)));
+
+  // Credenciales Kommo para confirmar etapa en vivo cuando la persistida es nula.
+  // loadConfig está cacheado (TTL 60s) → no agrega costo de DB.
+  const kommoCreds = await (async () => {
+    if (!respondingStageIds || respondingStageIds.length === 0) return undefined;
+    const c = await loadConfig(supabase);
+    const domain = c.get("KOMMO_API_DOMAIN");
+    const token = c.get("KOMMO_ACCESS_TOKEN");
+    return domain && token ? { domain, token } : undefined;
+  })();
+
   // Debounce configurable: segundos de silencio a esperar antes de responder el
   // batch. Default 45s. No aplica al camino de revisión humana explícita.
   const debounceMs = forceReview
@@ -1233,7 +1282,7 @@ Deno.serve(async (req: Request) => {
     checkout: cfg?.shopify_can_checkout === true,
   };
 
-  const batch = await pickLeadBatch(body.message_id, bypass, throttle, ignoredStageIds, debounceMs, maxAgeHours);
+  const batch = await pickLeadBatch(body.message_id, bypass, throttle, ignoredStageIds, debounceMs, maxAgeHours, respondingStageIds, kommoCreds);
   if (!batch) {
     return new Response(JSON.stringify({ ok: true, picked: null }), {
       status: 200,
