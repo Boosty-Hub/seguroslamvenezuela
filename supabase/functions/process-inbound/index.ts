@@ -581,22 +581,72 @@ function assertAllowedAudioUrl(raw: string): URL {
   return u;
 }
 
+// Kommo (amojo) sirve el audio detrás de un 301 hacia una URL firmada de su
+// storage (amojo.kommo.com → storage.googleapis.com/kommo-drive-*). Seguimos los
+// redirects A MANO validando el host de CADA salto: la URL inicial es input
+// hostil del webhook y un 3xx no debe poder llevarnos a una IP interna.
+const AUDIO_REDIRECT_HOST_SUFFIXES = [
+  ...AUDIO_HOST_SUFFIXES,
+  ".googleapis.com", // storage.googleapis.com — signed URL del kommo-drive
+  ".amazonaws.com",  // S3 — por si algún tenant lo usa
+];
+
+function assertAllowedRedirectUrl(raw: string): URL {
+  const u = new URL(raw);
+  if (u.protocol !== "https:") throw new Error("audio redirect no-https");
+  const host = u.hostname.toLowerCase().replace(/\.$/, "");
+  if (/^[\d.]+$/.test(host) || host.includes(":")) throw new Error("audio redirect host no permitido");
+  if (!AUDIO_REDIRECT_HOST_SUFFIXES.some((s) => host.endsWith(s) || host === s.slice(1)))
+    throw new Error(`audio redirect host no permitido: ${host}`);
+  return u;
+}
+
+// fetch que sigue redirects a mano (revalidando cada destino) — redirect:"follow"
+// no nos dejaría revalidar el host del salto.
+async function fetchFollowingRedirects(initial: URL, maxHops = 3): Promise<Response> {
+  let current: URL = initial;
+  for (let hop = 0; hop <= maxHops; hop++) {
+    const res = await fetch(current, { redirect: "manual" });
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location");
+      if (!loc) throw new Error(`audio redirect ${res.status} sin Location`);
+      current = assertAllowedRedirectUrl(new URL(loc, current).toString());
+      continue;
+    }
+    return res;
+  }
+  throw new Error("audio: demasiados redirects");
+}
+
+// Extensión que Whisper reconoce, derivada del content-type. El nombre que da
+// Kommo (file.ogg) suele mentir: el archivo real puede ser m4a/mp4.
+function whisperFilename(contentType: string | null, fallback?: string): string {
+  const ct = (contentType || "").toLowerCase();
+  if (ct.includes("mp4") || ct.includes("m4a") || ct.includes("aac")) return "audio.m4a";
+  if (ct.includes("mpeg") || ct.includes("mp3") || ct.includes("mpga")) return "audio.mp3";
+  if (ct.includes("wav")) return "audio.wav";
+  if (ct.includes("webm")) return "audio.webm";
+  if (ct.includes("flac")) return "audio.flac";
+  if (ct.includes("ogg") || ct.includes("oga") || ct.includes("opus")) return "audio.ogg";
+  return fallback || "audio.ogg";
+}
+
 async function transcribeAudio(
   openaiKey: string,
   url: string,
   filename?: string
 ): Promise<string | null> {
   const safeUrl = assertAllowedAudioUrl(url);
-  // redirect:"error" → un 3xx no puede re-dirigir el fetch a una IP interna
-  // después de la validación.
-  const audioRes = await fetch(safeUrl, { redirect: "error" });
+  // amojo responde 301 hacia su storage firmado — seguimos el redirect
+  // revalidando el host de cada salto (anti-SSRF), en vez de rechazarlo.
+  const audioRes = await fetchFollowingRedirects(safeUrl);
   if (!audioRes.ok) throw new Error(`audio download ${audioRes.status}`);
   const blob = await audioRes.blob();
   if (blob.size === 0) throw new Error("audio vacío");
   if (blob.size > MAX_AUDIO_BYTES) throw new Error(`audio demasiado grande (${blob.size} bytes)`);
 
   const form = new FormData();
-  form.append("file", blob, filename || "audio.ogg");
+  form.append("file", blob, whisperFilename(audioRes.headers.get("content-type"), filename));
   form.append("model", "whisper-1");
   const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
@@ -970,6 +1020,7 @@ async function recoverFailedClassifications(anthropic: Anthropic, operator: stri
     for (const msg of rows) {
       const isPlaceholder = /^\[(Imagen|Documento|Audio|Archivo)/.test(msg.content ?? "");
       let mediaForClassify: MediaForClassify | null = null;
+      let recoveredText: string | null = null; // transcripción de audio recuperada
       if (isPlaceholder) {
         if (msg.media_url && (msg.media_kind === "image" || msg.media_kind === "document")) {
           mediaForClassify = {
@@ -977,6 +1028,24 @@ async function recoverFailedClassifications(anthropic: Anthropic, operator: stri
             label: msg.media_kind === "image" ? "Imagen" : "Documento",
             source: { type: "url", url: msg.media_url },
           };
+        } else if (msg.media_url && msg.media_kind === "audio") {
+          // Nota de voz: re-transcribir (la descarga ya sigue el redirect amojo→GCS).
+          const openaiKey = runtimeCfg.get("OPENAI_API_KEY");
+          if (openaiKey) {
+            try {
+              const transcript = await transcribeAudio(openaiKey, msg.media_url);
+              if (transcript) recoveredText = `🎙️ ${transcript}`;
+            } catch (e) {
+              console.warn("recover transcribe:", e instanceof Error ? e.message : String(e));
+            }
+          }
+          if (!recoveredText) {
+            await supabase
+              .from("messages")
+              .update({ requires_human_review: true, classification: { error: "recover: audio_transcribe_failed" } })
+              .eq("id", msg.id);
+            continue;
+          }
         } else {
           // Adjunto irrecuperable (sin URL o tipo no procesable) → que lo vea un humano.
           await supabase
@@ -986,12 +1055,16 @@ async function recoverFailedClassifications(anthropic: Anthropic, operator: stri
           continue;
         }
       }
-      const text = isPlaceholder ? "" : (msg.content ?? "");
+      const text = recoveredText ?? (isPlaceholder ? "" : (msg.content ?? ""));
       try {
         const cls = await classify(text, msg.source ?? "unknown", verticals, anthropic, operator, classifyModel, mediaForClassify);
         const v = verticalsBySlug.get(cls.vertical_slug);
         const extra: Record<string, unknown> = {};
-        if (mediaForClassify && cls.media_summary && cls.media_summary.trim()) {
+        if (recoveredText) {
+          // Reemplaza el placeholder "[Audio …]" por la transcripción real para
+          // que el agente responda al contenido de la nota de voz.
+          extra.content = recoveredText;
+        } else if (mediaForClassify && cls.media_summary && cls.media_summary.trim()) {
           extra.content = `[${mediaForClassify.label}] ${cls.media_summary.trim()}`;
         }
         if (v?.ignore) {
