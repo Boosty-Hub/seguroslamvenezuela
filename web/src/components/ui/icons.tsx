@@ -173,6 +173,18 @@ export function Eye({ size = 18, ...props }: IconProps) {
   );
 }
 
+/** Ojo tachado — ocultar contraseña */
+export function EyeOff({ size = 18, ...props }: IconProps) {
+  return (
+    <svg {...base(size)} {...props}>
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+      <path d="M6.61 6.61A18.5 18.5 0 0 0 1 12s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61" />
+      <line x1="2" x2="22" y1="2" y2="22" />
+    </svg>
+  );
+}
+
 /** Inbox / bandeja de entrada */
 export function Inbox({ size = 18, ...props }: IconProps) {
   return (

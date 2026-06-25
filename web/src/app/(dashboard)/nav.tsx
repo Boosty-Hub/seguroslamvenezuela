@@ -22,6 +22,7 @@ type NavItem = {
 type NavGroup = {
   label: string;
   items: NavItem[];
+  adminOnly?: boolean;
 };
 
 // Grupos de sección (NO cambia rutas).
@@ -47,11 +48,13 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: "Configuración",
+    adminOnly: true,
     items: [
       { href: "/agent", label: "Agente", icon: Bot },
       { href: "/tools", label: "Tools", icon: Wrench },
       { href: "/seguimiento", label: "Seguimiento", icon: Repeat },
       { href: "/alerts", label: "Alertas", icon: Bell },
+      { href: "/usuarios", label: "Usuarios", icon: Users },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
@@ -104,15 +107,17 @@ function NavItemLink({
 
 function NavGroups({
   alertsCount,
+  isAdmin,
   onNavigate,
 }: {
   alertsCount: number;
+  isAdmin: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-2">
-      {NAV_GROUPS.map((group) => (
+      {NAV_GROUPS.filter((group) => !group.adminOnly || isAdmin).map((group) => (
         <div key={group.label}>
           <p className="px-3 pb-1.5 pt-5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
             {group.label}
@@ -176,11 +181,13 @@ export function SidebarNav({
   alertsCount,
   label,
   bcv,
+  isAdmin,
 }: {
   email: string;
   alertsCount: number;
   label?: string;
   bcv?: BcvData;
+  isAdmin: boolean;
 }) {
   const agentLabel = label || ENV_AGENT_LABEL;
   const initial = agentLabel.charAt(0).toUpperCase();
@@ -197,7 +204,7 @@ export function SidebarNav({
         </p>
       </div>
 
-      <NavGroups alertsCount={alertsCount} />
+      <NavGroups alertsCount={alertsCount} isAdmin={isAdmin} />
 
       {/* Pill BCV compacto sobre el footer de usuario */}
       {bcv && (
@@ -216,11 +223,13 @@ export function MobileNav({
   alertsCount,
   label,
   bcv,
+  isAdmin,
 }: {
   email: string;
   alertsCount: number;
   label?: string;
   bcv?: BcvData;
+  isAdmin: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const agentLabel = label || ENV_AGENT_LABEL;
@@ -278,6 +287,7 @@ export function MobileNav({
             </div>
             <NavGroups
               alertsCount={alertsCount}
+              isAdmin={isAdmin}
               onNavigate={() => setOpen(false)}
             />
             <NavFooter email={email} onNavigate={() => setOpen(false)} />

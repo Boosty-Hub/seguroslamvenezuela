@@ -68,6 +68,26 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // ── Gating por rol ────────────────────────────────────────────────────────
+  // Los editores NO entran a "Configuración" ni a sus APIs (solo admin). El rol
+  // vive en app_metadata.role; sin rol explícito (master de /first-run) = admin.
+  if (user && !isPublic) {
+    const role = (user.app_metadata as Record<string, unknown> | null)?.role;
+    if (role === "editor") {
+      const ADMIN_ONLY_PAGES = ["/agent", "/tools", "/seguimiento", "/alerts", "/settings", "/usuarios"];
+      const ADMIN_ONLY_APIS = ["/api/usuarios", "/api/agent", "/api/settings", "/api/setup", "/api/tools", "/api/response-limits"];
+      const hits = (prefixes: string[]) => prefixes.some((p) => pathname === p || pathname.startsWith(p + "/"));
+      if (hits(ADMIN_ONLY_APIS)) {
+        return NextResponse.json({ error: "forbidden: requiere rol admin" }, { status: 403 });
+      }
+      if (hits(ADMIN_ONLY_PAGES)) {
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = "/inbox";
+        return NextResponse.redirect(redirectUrl);
+      }
+    }
+  }
+
   if (user && pathname === "/login") {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/inbox";

@@ -37,14 +37,17 @@ export default async function DashboardLayout({
   // capacidad está activa; si la fuente falla, simplemente no hay badge.
   const bcv = pubCfg?.bcv_rate_enabled === true ? await getBcvRateCached() : null;
 
+  // Rol: los editores no ven el grupo "Configuración" en el nav. Sin rol = admin.
+  const isAdmin = (user?.app_metadata as Record<string, unknown> | null)?.role !== "editor";
+
   return (
     <div className="flex h-dvh overflow-hidden bg-neutral-50">
       <Suspense fallback={null}>
         <NavProgress />
       </Suspense>
-      <SidebarNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} />
+      <SidebarNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} isAdmin={isAdmin} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} />
+        <MobileNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} isAdmin={isAdmin} />
         <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
       </div>
     </div>
