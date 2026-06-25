@@ -18,6 +18,14 @@ const KEY = "SUPABASE_ACCESS_TOKEN";
 function makeClient(supabaseUrl: string, serviceRoleKey: string) {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
+    // INVARIANT: never let Next.js cache these reads. The access token can be
+    // rotated at runtime; a cached GET (persisted to .next/cache across restarts)
+    // would keep serving a STALE token → 401 from the Management API → false
+    // "updates available" drift and recurring 502s in the provision endpoints.
+    global: {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        fetch(input, { ...init, cache: "no-store" }),
+    },
   });
 }
 

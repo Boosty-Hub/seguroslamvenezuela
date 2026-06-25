@@ -14,6 +14,14 @@ const KEY = "DEPLOYED_FUNCTION_HASHES";
 function makeClient(supabaseUrl: string, serviceRoleKey: string) {
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false },
+    // INVARIANT: no-store. A cached GET (persisted across restarts in .next/cache)
+    // would return a STALE hash map → false "function changed" drift, and worse,
+    // saveDeployedHash reads-then-writes the whole map, so a stale read would
+    // clobber other slugs' recorded hashes.
+    global: {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        fetch(input, { ...init, cache: "no-store" }),
+    },
   });
 }
 
