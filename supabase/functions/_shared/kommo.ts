@@ -70,6 +70,32 @@ export async function patchContactField(
 }
 
 /**
+ * Actualiza el CONTENIDO de una plantilla de chat de Kommo
+ * (PATCH /api/v4/chats/templates con [{id, content}]). El flujo legacy de n8n
+ * escribe la respuesta del agente en una plantilla y luego corre un salesbot
+ * que la envía. Throws si la respuesta no es OK.
+ */
+export async function patchChatTemplate(
+  templateId: number,
+  content: string,
+  kommoDomain: string,
+  kommoToken: string
+): Promise<void> {
+  const url = `https://${kommoDomain}/api/v4/chats/templates`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${kommoToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify([{ id: templateId, content }]),
+  });
+  if (!res.ok) {
+    throw new Error(`patch chat template: ${res.status} ${await res.text()}`);
+  }
+}
+
+/**
  * Mueve un lead a otra etapa (status_id) de Kommo, opcionalmente cambiando de
  * pipeline. Throws si la respuesta no es OK.
  */

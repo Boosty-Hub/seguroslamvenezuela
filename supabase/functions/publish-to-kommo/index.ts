@@ -15,7 +15,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { loadConfig } from "../_shared/config.ts";
-import { patchLeadField, runSalesbot } from "../_shared/kommo.ts";
+import { patchLeadField, patchChatTemplate, runSalesbot } from "../_shared/kommo.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -23,6 +23,8 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { persistSession: false },
 });
+
+type SalesbotTemplatePair = { template: number; salesbot: number };
 
 type KommoConfig = {
   id: string;
@@ -36,13 +38,16 @@ type KommoConfig = {
   comment_reply_enabled: boolean;
   comment_salesbot_id: number | null;
   comment_field_id: number | null;
+  // Mecanismo legacy de n8n: pares {plantilla de chat, salesbot}. Si hay pares,
+  // la entrega del DM usa plantilla+salesbot (rotando) en vez de custom field.
+  salesbot_template_pairs: SalesbotTemplatePair[] | null;
 };
 
 async function getConfig(): Promise<KommoConfig | null> {
   const { data, error } = await supabase
     .from("kommo_publish_config")
     .select(
-      "id, response_custom_field_id, salesbot_id, publishing_enabled, auto_reply_mode, publish_from, comment_reply_enabled, comment_salesbot_id, comment_field_id"
+      "id, response_custom_field_id, salesbot_id, publishing_enabled, auto_reply_mode, publish_from, comment_reply_enabled, comment_salesbot_id, comment_field_id, salesbot_template_pairs"
     )
     .eq("is_active", true)
     .limit(1)
@@ -91,11 +96,10 @@ async function publishOne(
 ) {
   const kommoLeadId = draft.messages?.leads?.kommo_lead_id;
   if (!kommoLeadId) throw new Error("kommo_lead_id missing");
-  if (!config.response_custom_field_id) throw new Error("response_custom_field_id no configurado");
-  if (!config.salesbot_id) throw new Error("salesbot_id no configurado");
 
   const leadId = Number(kommoLeadId);
   const meta = draft.agent_metadata ?? {};
+  const pairs = Array.isArray(config.salesbot_template_pairs) ? config.salesbot_template_pairs : [];
 
   // ---- Respuesta pública IA (comentario de Instagram) — fail-open ----
   // Usa meta.public_reply generado por Haiku en generate-response.
@@ -120,10 +124,22 @@ async function publishOne(
     }
   }
 
-  // ---- Flujo normal: DM por campo + salesbot estándar ----
-  // SIEMPRE corre, independientemente de si la parte pública falló.
-  await patchLeadField(leadId, config.response_custom_field_id, draft.body, kommoDomain, kommoToken);
-  await runSalesbot(config.salesbot_id, leadId, kommoDomain, kommoToken);
+  // ---- Flujo normal (DM): SIEMPRE corre ----
+  if (pairs.length > 0) {
+    // Mecanismo legacy de n8n (probado en producción): escribir la respuesta en
+    // una plantilla de chat y correr el salesbot pareado. Se rota aleatoriamente
+    // entre los pares para evitar colisiones cuando hay varias conversaciones
+    // a la vez (dos leads sobreescribiendo la misma plantilla antes de enviarse).
+    const pair = pairs[Math.floor(Math.random() * pairs.length)];
+    await patchChatTemplate(pair.template, draft.body, kommoDomain, kommoToken);
+    await runSalesbot(pair.salesbot, leadId, kommoDomain, kommoToken);
+  } else {
+    // Mecanismo del template: custom field del lead + salesbot que lo lee.
+    if (!config.response_custom_field_id) throw new Error("response_custom_field_id no configurado");
+    if (!config.salesbot_id) throw new Error("salesbot_id no configurado");
+    await patchLeadField(leadId, config.response_custom_field_id, draft.body, kommoDomain, kommoToken);
+    await runSalesbot(config.salesbot_id, leadId, kommoDomain, kommoToken);
+  }
 }
 
 Deno.serve(async (req: Request) => {
