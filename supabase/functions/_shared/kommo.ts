@@ -6,6 +6,26 @@
 //   import { patchLeadField, runSalesbot } from "../_shared/kommo.ts";
 
 /**
+ * Sanea texto antes de escribirlo en un custom field de Kommo.
+ *
+ * El almacenamiento de custom fields de Kommo es utf8mb3 (el "utf8" de 3 bytes
+ * de MySQL): cualquier carácter de 4 bytes —emojis y demás del plano astral,
+ * code point > U+FFFF— TRUNCA el valor; se pierde TODO lo que sigue al primer
+ * emoji. Verificado contra la API real: "PARTE_A😀PARTE_B" se guarda como
+ * "PARTE_A". Saltos de línea y acentos (≤3 bytes) se conservan perfecto y la
+ * longitud no es problema (≥648 chars OK), así que solo removemos los chars de
+ * 4 bytes y limpiamos los espacios dobles que deja el emoji quitado (sin tocar
+ * los saltos de línea, que el campo es textarea).
+ */
+export function sanitizeForKommoField(text: string): string {
+  return text
+    .replace(/[\u{10000}-\u{10FFFF}]/gu, "") // emojis/4-byte → evita el truncado utf8mb3
+    .replace(/[ \t]{2,}/g, " ") // colapsa espacios que deja el emoji removido (preserva \n)
+    .replace(/[ \t]+\n/g, "\n") // recorta espacios al final de cada línea
+    .trim();
+}
+
+/**
  * Actualiza un custom field de un lead en Kommo.
  * Throws si la respuesta no es OK.
  */
@@ -27,7 +47,7 @@ export async function patchLeadField(
       custom_fields_values: [
         {
           field_id: fieldId,
-          values: [{ value }],
+          values: [{ value: sanitizeForKommoField(value) }],
         },
       ],
     }),
