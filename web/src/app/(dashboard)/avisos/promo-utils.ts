@@ -1,11 +1,14 @@
-// promo-utils.ts — tipos y helpers de promociones/eventos.
+// promo-utils.ts — tipos y helpers para avisos, promos y eventos.
 // CLIENT-SAFE: sin "use client", sin imports de servidor.
+// Todos viven en la tabla `promotions`; `kind` los distingue.
+
+export type PromoKind = "promo" | "evento" | "aviso";
 
 export type Promo = {
   id: string;
   name: string;
   content: string;
-  kind: "promo" | "evento";
+  kind: PromoKind;
   starts_at: string | null;
   ends_at: string | null;
   weekdays: number[] | null;
@@ -13,6 +16,13 @@ export type Promo = {
 };
 
 export type PromoStatus = "activa" | "programada" | "finalizada" | "apagada";
+
+// Metadata de presentación por tipo. `badge` mapea a colores del componente Badge.
+export const KIND_META: Record<PromoKind, { label: string; badge: "neutral" | "violet" | "amber" }> = {
+  aviso: { label: "Aviso", badge: "amber" },
+  promo: { label: "Promo", badge: "neutral" },
+  evento: { label: "Evento", badge: "violet" },
+};
 
 // now: Date del cliente (no se computa TZ del negocio en UI; aproximación local del operador).
 export function promoStatus(p: Promo, now: Date): PromoStatus {

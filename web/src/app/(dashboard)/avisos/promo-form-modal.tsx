@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { type Promo } from "./promo-utils";
+import { type Promo, type PromoKind } from "./promo-utils";
 
 type PromoFormModalProps = {
   open: boolean;
@@ -23,12 +23,19 @@ const DOW_LABELS = [
   { isodow: 7, label: "Dom" },
 ];
 
+// Orden y copy de cada tipo en el selector.
+const KIND_OPTIONS: { value: PromoKind; label: string; hint: string }[] = [
+  { value: "aviso", label: "Aviso / Situación", hint: "El agente lo tiene en cuenta SIEMPRE al responder (ej: cierre por emergencia, feriado imprevisto)." },
+  { value: "promo", label: "Promo", hint: "El agente la menciona solo si viene al caso de lo que pregunta el lead." },
+  { value: "evento", label: "Evento", hint: "Como una promo, y además puede anticiparlo si empieza dentro de los próximos 7 días." },
+];
+
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export default function PromoFormModal({ open, initial, onClose, onSaved }: PromoFormModalProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
-  const [kind, setKind] = useState<"promo" | "evento">(initial?.kind ?? "promo");
+  const [kind, setKind] = useState<PromoKind>(initial?.kind ?? "aviso");
   const [startsAt, setStartsAt] = useState(initial?.starts_at ?? "");
   const [endsAt, setEndsAt] = useState(initial?.ends_at ?? "");
   const [weekdays, setWeekdays] = useState<number[]>(initial?.weekdays ?? []);
@@ -36,8 +43,7 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Reset state when modal opens with new initial value
-  // (simple approach — reset when component mounts with `initial` prop change)
+  const kindHint = KIND_OPTIONS.find((o) => o.value === kind)?.hint ?? "";
 
   function toggleWeekday(dow: number) {
     setWeekdays((prev) =>
@@ -49,7 +55,6 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
     e.preventDefault();
     setError(null);
 
-    // Validaciones frontend
     const trimmedName = name.trim();
     if (!trimmedName) { setError("El nombre es requerido"); return; }
     const trimmedContent = content.trim();
@@ -98,7 +103,7 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
   return (
     <Modal
       open={open}
-      title={initial ? "Editar promo o evento" : "Nueva promo o evento"}
+      title={initial ? "Editar aviso, promo o evento" : "Nuevo aviso, promo o evento"}
       onClose={onClose}
       size="lg"
       footer={
@@ -129,7 +134,7 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ej: Los Remartes, Estreno de verano…"
+            placeholder="Ej: Cierre por emergencia, Remate de verano…"
             className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400"
             required
           />
@@ -138,23 +143,24 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
         {/* Tipo */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-neutral-700">Tipo</label>
-          <div className="flex gap-2">
-            {(["promo", "evento"] as const).map((k) => (
+          <div className="flex flex-wrap gap-2">
+            {KIND_OPTIONS.map((o) => (
               <button
-                key={k}
+                key={o.value}
                 type="button"
-                onClick={() => setKind(k)}
+                onClick={() => setKind(o.value)}
                 className={[
                   "px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors",
-                  kind === k
+                  kind === o.value
                     ? "border-neutral-900 bg-neutral-900 text-white"
                     : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50",
                 ].join(" ")}
               >
-                {k === "promo" ? "Promo" : "Evento"}
+                {o.label}
               </button>
             ))}
           </div>
+          <p className="text-xs text-neutral-500">{kindHint}</p>
         </div>
 
         {/* Contenido */}
@@ -167,7 +173,7 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
-            placeholder="Lo que el agente debe saber y mencionar sobre esta promo…"
+            placeholder="Lo que el agente debe saber sobre esto…"
             className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-1 focus:ring-neutral-400 resize-y"
             required
           />
@@ -231,9 +237,9 @@ export default function PromoFormModal({ open, initial, onClose, onSaved }: Prom
             checked={enabled}
             onChange={setEnabled}
             tone="emerald"
-            aria-label="Activar promo"
+            aria-label="Activar"
           />
-          <span className="text-sm text-neutral-700">{enabled ? "Activa" : "Desactivada"}</span>
+          <span className="text-sm text-neutral-700">{enabled ? "Activo" : "Desactivado"}</span>
         </div>
       </form>
     </Modal>

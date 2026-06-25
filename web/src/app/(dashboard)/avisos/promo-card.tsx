@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge, Button, Switch } from "@/components/ui";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Edit, Trash } from "@/components/ui/icons";
-import { type Promo, type PromoStatus, promoStatus, vigenciaLabel } from "./promo-utils";
+import { type Promo, type PromoStatus, promoStatus, vigenciaLabel, KIND_META } from "./promo-utils";
 
 type PromoCardProps = {
   promo: Promo;
@@ -26,6 +26,7 @@ export default function PromoCard({ promo, onToggle, onEdit, onDelete }: PromoCa
 
   const status = promoStatus(promo, new Date());
   const { color, label } = statusBadge[status];
+  const kind = KIND_META[promo.kind];
   const vigencia = vigenciaLabel(promo);
 
   return (
@@ -35,9 +36,7 @@ export default function PromoCard({ promo, onToggle, onEdit, onDelete }: PromoCa
         <div className="flex items-start justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge color={color}>{label}</Badge>
-            <Badge color={promo.kind === "evento" ? "violet" : "neutral"}>
-              {promo.kind === "evento" ? "Evento" : "Promo"}
-            </Badge>
+            <Badge color={kind.badge}>{kind.label}</Badge>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Button
@@ -74,15 +73,15 @@ export default function PromoCard({ promo, onToggle, onEdit, onDelete }: PromoCa
             checked={promo.enabled}
             onChange={(next) => onToggle(promo.id, next)}
             tone="emerald"
-            aria-label={promo.enabled ? "Desactivar promoción" : "Activar promoción"}
+            aria-label={promo.enabled ? `Desactivar ${kind.label.toLowerCase()}` : `Activar ${kind.label.toLowerCase()}`}
           />
         </div>
       </div>
 
       <ConfirmDialog
         open={confirming}
-        title="Borrar promo"
-        description="Esta acción es irreversible. La promo dejará de estar disponible para el agente."
+        title={`Borrar ${kind.label.toLowerCase()}`}
+        description="Esta acción es irreversible. El agente dejará de conocer este ítem."
         confirmLabel="Borrar"
         cancelLabel="Cancelar"
         tone="danger"

@@ -873,7 +873,7 @@ function formatNow(timezone: string): string {
 
 // ---------------- Helpers de promociones/eventos ----------------
 type PromoRow = {
-  name: string; content: string; kind: "promo" | "evento";
+  name: string; content: string; kind: "promo" | "evento" | "aviso";
   starts_at: string | null; ends_at: string | null; weekdays: number[] | null;
 };
 
@@ -910,16 +910,21 @@ const PROMO_TRUNC = 250;
 function truncate(s: string, n: number) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
 function buildPromoContext(rows: PromoRow[], timezone: string): {
-  activePromos: string | null; upcomingEvents: string | null;
+  activePromos: string | null; upcomingEvents: string | null; avisos: string | null;
 } {
   const today = localDateParts(timezone);
-  const active = rows.filter((p) => isPromotionActiveToday(p, today)).slice(0, PROMO_CAP)
+  // Promos/eventos activos hoy (los avisos van aparte, abajo).
+  const active = rows.filter((p) => p.kind !== "aviso" && isPromotionActiveToday(p, today)).slice(0, PROMO_CAP)
     .map((p) => `- ${p.name}: ${truncate(p.content, PROMO_TRUNC)}`);
   const upcoming = rows.filter((p) => isUpcomingEvent(p, today)).slice(0, PROMO_CAP)
     .map((p) => `- ${p.name} (desde ${p.starts_at}): ${truncate(p.content, PROMO_TRUNC)}`);
+  // Avisos/situaciones vigentes hoy: el agente DEBE tenerlos en cuenta siempre.
+  const avisos = rows.filter((p) => p.kind === "aviso" && isPromotionActiveToday(p, today)).slice(0, PROMO_CAP)
+    .map((p) => `- ${p.name}: ${truncate(p.content, PROMO_TRUNC)}`);
   return {
     activePromos: active.length ? active.join("\n") : null,
     upcomingEvents: upcoming.length ? upcoming.join("\n") : null,
+    avisos: avisos.length ? avisos.join("\n") : null,
   };
 }
 
@@ -937,6 +942,7 @@ function buildContext(opts: {
   businessHours: { active: boolean; label: string };
   activePromos: string | null;
   upcomingEvents: string | null;
+  avisos: string | null;
   commentInstructions?: string | null;
 }) {
   const cls = opts.classification ?? {};
@@ -957,7 +963,7 @@ function buildContext(opts: {
   return `[CONTEXTO]
 fecha_hora_actual: ${opts.now} (zona horaria ${opts.timezone})
 en_horario_laboral: ${opts.businessHours.active ? "sí" : "no"} (${opts.businessHours.label}). Si es "no" y el lead necesita un asesor humano, avísale que el equipo lo contacta apenas retome el horario de atención — no prometas transferencia inmediata.
-${opts.activePromos ? `promociones_activas (menciónalas solo si vienen al caso de lo que pregunta el lead):\n${opts.activePromos}` : "promociones_activas: ninguna"}${opts.upcomingEvents ? `\neventos_proximos (puedes anticiparlos si aportan a la conversacion):\n${opts.upcomingEvents}` : ""}${opts.commentInstructions != null ? `\norigen_comentario_instagram: sí — ${opts.commentInstructions}` : ""}
+${opts.avisos ? `avisos_importantes (situaciones vigentes que DEBES tener en cuenta SIEMPRE al responder, aunque el lead no pregunte por esto — p.ej. cierres por emergencia, feriados imprevistos, cambios operativos):\n${opts.avisos}\n` : ""}${opts.activePromos ? `promociones_activas (menciónalas solo si vienen al caso de lo que pregunta el lead):\n${opts.activePromos}` : "promociones_activas: ninguna"}${opts.upcomingEvents ? `\neventos_proximos (puedes anticiparlos si aportan a la conversacion):\n${opts.upcomingEvents}` : ""}${opts.commentInstructions != null ? `\norigen_comentario_instagram: sí — ${opts.commentInstructions}` : ""}
 lead_id: ${opts.lead.id}
 lead_name: ${opts.lead.display_name ?? "(desconocido)"}
 lead_genero: ${opts.lead.gender && opts.lead.gender !== "desconocido" ? opts.lead.gender : "desconocido"} (para concordancias de género: bienvenido/a, interesado/a, estimado/a; si es desconocido usa formas neutras)
@@ -1407,6 +1413,7 @@ Deno.serve(async (req: Request) => {
         },
         activePromos: promoCtx.activePromos,
         upcomingEvents: promoCtx.upcomingEvents,
+        avisos: promoCtx.avisos,
         commentInstructions,
       });
 
