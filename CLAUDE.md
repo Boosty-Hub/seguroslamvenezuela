@@ -12,7 +12,7 @@ Repo: `web/` (Next.js 14 dashboard + API routes) + `supabase/` (Postgres migrati
 
 ## Seguros LAM — la fusión (lo específico de este cliente)
 
-Regla absoluta: **todo se construyó SIN OpenAI**. Embeddings = `gte-small` 384 (Supabase AI); visión/OCR/extracción de precios = **Claude**. Lo añadido sobre el template son las migraciones `0042`–`0050` y las Edge Functions `daily-price-sync` / `extract-prices` / `generar-cotizacion`.
+Regla absoluta: **todo se construyó SIN OpenAI**. Embeddings = `gte-small` 384 (Supabase AI); visión/OCR/extracción de precios = **Claude**. Lo añadido sobre el template son las migraciones `0042`–`0055` y las Edge Functions `daily-price-sync` / `extract-prices` / `generar-cotizacion`. (Capas nuevas jun-2026: **0051** KB por vertical, **0052** género/edad del lead, **0053** extract-prices una vez al día, **0054** lista de etapas, **0055** entrega por plantilla+salesbot estilo n8n.)
 
 ### Base de conocimiento enriquecida (módulo Contenido → pestaña "Base de conocimiento")
 - Ingesta `web/src/app/api/kb/ingest`: además de PDF/DOCX/TXT/MD/SRT/VTT acepta **XLSX/CSV e imágenes**, con detección por **magic-bytes** (`web/src/lib/kb-parsers.ts: detectTrueType`).
@@ -22,19 +22,46 @@ Regla absoluta: **todo se construyó SIN OpenAI**. Embeddings = `gte-small` 384 
 
 ### Precios Diarios (módulo nuevo → `(dashboard)/precios-diarios`)
 - Tablas `cotizaciones_diarias` / `daily_plan_catalog` (con columna `subcategoria` GENERATED) / `daily_prices` (migración 0046). 8 subcategorías × 10 rangos de edad = 80 cotizaciones/día.
-- `daily-price-sync`: scraper del cotizador externo `mspeed.yoestoyasegurado.co` (sin IA). `extract-prices`: lee los PDFs y extrae precios con **Claude vision + `output_config` json_schema** (`EXTRACT_PRICES_MODEL` default `claude-haiku-4-5`). Crons `*/10` parametrizados (migración 0047; bearer vía setting de DB, no en SQL; ambas `verify_jwt=false`).
+- `daily-price-sync`: scraper del cotizador externo `mspeed.yoestoyasegurado.co` (sin IA), cron `*/10` (migración 0047). `extract-prices`: lee los PDFs y extrae precios con **Claude vision + `output_config` json_schema** (`EXTRACT_PRICES_MODEL` default `claude-haiku-4-5`). **Optimizado (migración 0053):** corre **una vez al día** (08:00 UTC) y marca cada PDF como leído (`cotizaciones_diarias.prices_extracted_at`) para leerlo EXACTAMENTE una vez — antes marcaba "hecho" por presencia en `daily_prices`, así que un PDF que daba 0 filas se re-leía cada 10 min para siempre (era el mayor gasto de IA). Bearer vía setting de DB; ambas `verify_jwt=false`.
 - Route handlers `/api/precios/{precios,cotizaciones,sync,extract}` + item en el nav.
 
 ### Tools de precios del agente
 - `buscar_precios_seguros` (tool http → RPC PostgREST `buscar_precios_seguros`, migración 0048/0049): precios del día por subcategoría+rango **con `id_plan`** (join a `daily_plan_catalog`).
-- `generar_cotizacion` (tool http → Edge Function `generar-cotizacion`, migración 0049): genera la **cotización OFICIAL en PDF** vía `cotizar.php` (titular + beneficiarios + planes; calcula `fecha_nacimiento` desde la edad). Replica la tool `apidaniel` del flujo n8n; devuelve `pdf_url`.
+- `generar_cotizacion` (tool http → Edge Function `generar-cotizacion`, migración 0049): genera la **cotización OFICIAL en PDF** vía `cotizar.php` (titular + beneficiarios + planes; calcula `fecha_nacimiento` desde la edad). Replica la tool `apidaniel` del flujo n8n; devuelve `pdf_url` **y un `cotizacion_url` propio** (`<APP_BASE_URL>/cotizacion/<nombre-cliente>-<id>` → ruta pública Next con marca Seguros LAM + PDF embebido). El system prompt obliga a compartir el `cotizacion_url` (presentable/confiable), NUNCA el `pdf_url` crudo. `APP_BASE_URL` en runtime_config (la URL de Netlify del cliente).
 
 ### Poda (migración 0050)
 - Shopify deshabilitado (`buscar_producto`/`consultar_pedido`/`crear_link_pago`/`ver_categorias` → `enabled=false`). **BCV (`tasa_bcv`) y las tools CRM de Kommo se mantienen.**
 - RLS endurecido: las 3 tablas de precios quedan solo con policy `authenticated` (quitadas las `anon`/public legacy de LAM).
 
-### Estado del corte (cutover)
-Convive en paralelo con el flujo **n8n legacy**: ambos webhooks de Kommo escuchan `add_message`. El sistema nuevo corre en **modo sombra** (`agent_enabled=true`, `publishing_enabled=false`) → Valentina clasifica y redacta pero **no responde** en Kommo. El corte final = apagar el webhook de n8n + `publishing_enabled=true` + **rotar la anon key expuesta** (estuvo hardcodeada en el SPA/SQL de LAM).
+### KB por vertical (migración 0051)
+- `kb_documents.vertical` etiqueta cada documento; `search_kb` filtra por `vertical` (vía `metadata @> p_filter` en `runSearchKb` — no se cambió la RPC, solo se mete `vertical` en el metadata de los chunks y se extendió el `input_schema` de la tool). UI: panel de KB (uploader + listado + borrar) **dentro del editor de cada vertical** (`web/src/app/(dashboard)/verticales/vertical-kb-panel.tsx`) + API `GET /api/kb/by-vertical`. 4 verticales nuevas: **vida, hogar, ciberseguridad, empresarial**.
+- La KB legacy de LAM (`documents`, 3457 chunks OpenAI 1536 + `knowledge_files`, 160 archivos) fue **re-vectorizada** a `kb_documents`/`kb_chunks` (gte-small 384) mapeando `policy_type`→vertical. **Las tablas viejas (`documents`/`knowledge_files`) siguen INTACTAS** (n8n las usaba).
+
+### Trato por género y edad (migración 0052)
+- El preclasificador (Haiku, `process-inbound`) infiere `gender` del **NOMBRE** del lead y `age` si la persona la declara; se guardan en `leads.gender`/`leads.age` y se inyectan en el contexto del agente (`buildContext`). Visible en el inbox (badge ♀/♂ + edad; 55+ en ámbar).
+- **Framing clave**: Haiku se NIEGA a "inferir género" con el framing directo (devuelve "desconocido"); funciona pidiéndole "normalización gramatical para concordancia (bienvenido/a)". Si tocas esa instrucción, mantené ese encuadre.
+- El system prompt adapta el registro: **55+ → usted** (formal, pausado, explicativo); **<30 → tuteo casual**; 30-54/desconocida → tuteo profesional. Concordancia de género (formas neutras si es desconocido).
+
+### Modelo y dialecto del agente
+- `AGENT_MODEL` está en **`claude-sonnet-4-6`** (se cambió de Haiku porque Haiku producía **voseo argentino** imitando el historial del lead, pese al prompt). Editable en `/consumo` (panel "Modelos por componente").
+- El `SYSTEM_PROMPT` lleva una **"REGLA DE DIALECTO INNEGOCIABLE"**: español venezolano (tuteo, o usted con mayores); PROHIBIDO el voseo; y **no imitar el dialecto del historial/memoria**. Las memorias de lead con voseo residual se limpiaron.
+
+### Gating por etapa + handoff al asesor (migración 0054)
+- `kommo_publish_config` tiene `responding_stage_ids` (lista blanca) e `ignored_stage_ids` (lista negra); ambas se evalúan en `pickLeadBatch` de `generate-response`. **Operativamente se usa la lista NEGRA** porque la UI `/agent → filtros → Etapas de Kommo` la gestiona: se **pausan todas las etapas menos** donde responde el agente (Incoming/Leads Entrantes + Conver. IA de **VENTAS ANA y VENTAS MARIA** + **PERDIDOS** 143). La lista blanca quedó en código pero vacía (evita 2 fuentes de verdad en la UI).
+- **Handoff**: cuando el cliente confirma que quiere **contratar/adquirir un plan**, el agente mueve el lead a **"VIENE DEL AGENTE IA (ATENDER)"** con `mover_etapa` (acción autorizada explícitamente en el prompt para este caso); esa etapa está en pausa → el agente deja de responder. `mover_etapa` desambigua por el **pipeline ACTUAL** del lead (la etapa existe en Ana y Maria). `process-inbound` ahora procesa `leads.update` → mantiene fresca `leads.kommo_stage_id`.
+
+### Entrega: mecanismo n8n por plantilla+salesbot (migración 0055)
+- El flujo legacy de n8n NO usa custom field: escribe la respuesta en una **plantilla de chat** (`PATCH /api/v4/chats/templates`) y corre un **salesbot** que la envía, **rotando aleatoriamente entre 5 pares** `{template, salesbot}` (anti-colisión). El template por defecto usaba custom field + salesbot que lo lee — incompatible con esos salesbots.
+- `publish-to-kommo` ahora soporta ambos: si `kommo_publish_config.salesbot_template_pairs` tiene pares → mecanismo n8n (`patchChatTemplate` + `runSalesbot` con rotación); si no → custom field (`response_custom_field_id` + `salesbot_id`). LAM usa los **5 pares del workflow n8n** (plantillas 52312… / salesbots 57736…, extraídos de `SegurosLam.json`).
+
+### Dreams: programación configurable
+- `DREAMS_ENABLED` (on/off) + `DREAMS_EVERY_DAYS` (cada cuántos días) en runtime_config; `dreams-run` se **auto-saltea** según la cadencia (el cron sigue diario, pero la función decide; el run manual fuerza con `force:true`). Selector en `/dreams`. Esto es independiente de `DREAMS_AUTO_ACTIVATE` (qué se activa solo).
+
+### UX / performance del dashboard
+- **Barra de progreso de navegación** (`(dashboard)/nav-progress.tsx`, montada en el layout) para feedback instantáneo al clic. **`fetchPipelinesCached`** (`unstable_cache` 5 min) evita pegarle a Kommo en cada render del inbox. Inbox: **alerta animada** (triángulo rojo pulsante) en conversaciones que el agente no respondió (revisión humana / hostil).
+
+### Estado del corte (cutover) — EN VIVO (jun-2026)
+Se **salió de modo sombra**: `agent_enabled=true`, `publishing_enabled=true`, `bypass_review=true` (publica todo sin pasar por revisión automática; el botón manual de revisión sí queda `pending`). `publish_from` se fijó al go-live y los ~54 borradores viejos de sombra quedaron `rejected` para que NO se dispararan al activar el envío (⚠️ si algún día se activa publishing con `publish_from=null`, se enviarían todos los `approved` viejos a clientes reales — siempre fijar `publish_from`). La entrega usa el mecanismo n8n (plantilla+salesbot). **Dependencia operativa crítica:** el flujo **n8n legacy debe estar APAGADO** — si sigue activo, ambos sistemas responden (mensajes duplicados + colisión en las mismas 5 plantillas). Pendiente menor: rotar la anon key expuesta.
 
 ## Desplegar un cliente nuevo (zero-CLI — todo desde el navegador)
 
