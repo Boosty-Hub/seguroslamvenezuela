@@ -1,5 +1,6 @@
 // server-only: reads Kommo creds from runtime_config and calls the Kommo REST API.
 // Used by /api/kommo/pipelines and /api/filters/generate.
+import { unstable_cache } from "next/cache";
 import { configValues } from "@/lib/runtime-config";
 
 export type KommoStage = { id: number; name: string; color: string | null };
@@ -47,6 +48,15 @@ export async function fetchPipelines(): Promise<{
   }));
   return { configured: true, pipelines };
 }
+
+// Versión cacheada (revalida cada 5 min): los pipelines/etapas casi no cambian.
+// El inbox la usa para resolver nombres de etapa sin pegarle a Kommo en CADA
+// render (era ~200-500ms de latencia externa por apertura de conversación).
+export const fetchPipelinesCached = unstable_cache(
+  async () => fetchPipelines(),
+  ["kommo-pipelines"],
+  { revalidate: 300 }
+);
 
 export type KommoUser = { id: number; name: string; email: string | null };
 

@@ -8,7 +8,7 @@ import ScrollToBottom from "./scroll-to-bottom";
 import ReviewActions from "./review-actions";
 import ChannelIcon from "./channel-icon";
 import InboxFilters from "./filters";
-import { fetchPipelines, fetchLeadStage } from "@/lib/kommo";
+import { fetchPipelinesCached, fetchLeadStage } from "@/lib/kommo";
 import { configValue } from "@/lib/runtime-config";
 import { KommoLeadLink } from "./kommo-lead-link";
 import { computeAgentStatus, AgentStatusBadge, type AgentStatus } from "./agent-status";
@@ -306,7 +306,7 @@ export default async function InboxPage({
 
     // Cargar mapa de etapas desde Kommo para resolución de nombres (fail-open)
     try {
-      const { configured, pipelines } = await fetchPipelines();
+      const { configured, pipelines } = await fetchPipelinesCached();
       if (configured) {
         for (const p of pipelines) {
           for (const s of p.statuses) {

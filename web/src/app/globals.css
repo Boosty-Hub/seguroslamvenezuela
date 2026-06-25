@@ -25,3 +25,18 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Barra de progreso de navegación (feedback instantáneo al hacer clic) */
+@keyframes nav-progress-slide {
+  0%   { left: -35%; width: 35%; }
+  50%  { left: 30%;  width: 45%; }
+  100% { left: 100%; width: 35%; }
+}
+.nav-progress-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 9999px;
+  background: rgb(var(--brand));
+  animation: nav-progress-slide 1.05s ease-in-out infinite;
+}

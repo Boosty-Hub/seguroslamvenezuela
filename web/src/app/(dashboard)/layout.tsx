@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { configValue } from "@/lib/runtime-config";
 import { getBcvRateCached } from "@/lib/exchange";
 import { MobileNav, SidebarNav } from "./nav";
 import { UpdatesBanner } from "./updates-banner";
+import { NavProgress } from "./nav-progress";
 
 export default async function DashboardLayout({
   children,
@@ -41,6 +43,9 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-dvh overflow-hidden bg-neutral-50">
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
       <SidebarNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} />
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileNav email={email} alertsCount={alerts} label={label} bcv={bcv ?? undefined} />
