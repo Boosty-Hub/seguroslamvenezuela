@@ -15,6 +15,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname.startsWith("/api/provision") ||
+    pathname.startsWith("/cotizacion") ||
     pathname.startsWith("/first-run");
 
   if (!url || !anon) {
@@ -58,6 +59,7 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico" ||
     pathname.startsWith("/api/provision") ||
+    pathname.startsWith("/cotizacion") ||
     pathname.startsWith("/first-run");
 
   if (!user && !isPublic) {
