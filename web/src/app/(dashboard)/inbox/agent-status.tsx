@@ -24,9 +24,10 @@ export function computeAgentStatus(input: {
   publishingEnabled: boolean;
   salesbotId: number | null;
   ignoredStageIds: number[];
+  respondingStageIds: number[];
   stageId: number | null;
 }): AgentStatus {
-  const { agentEnabled, publishingEnabled, salesbotId, ignoredStageIds, stageId } = input;
+  const { agentEnabled, publishingEnabled, salesbotId, ignoredStageIds, respondingStageIds, stageId } = input;
 
   if (!agentEnabled) {
     return {
@@ -35,6 +36,16 @@ export function computeAgentStatus(input: {
       detail: "El interruptor general está apagado: el agente no responde a NINGÚN lead.",
       fixHref: "/settings",
       fixLabel: "Encender en Configuración",
+    };
+  }
+  if (respondingStageIds.length > 0 && stageId != null && !respondingStageIds.includes(stageId)) {
+    return {
+      tone: "amber",
+      label: "Fuera de etapa activa",
+      detail:
+        "El agente solo responde en las etapas activas (lista blanca). Este lead está en otra etapa — el agente no le responde (lo atiende un asesor humano, o ya se hizo el handoff).",
+      fixHref: "/agent?tab=filtros",
+      fixLabel: "Ver etapas activas",
     };
   }
   if (stageId != null && ignoredStageIds.includes(stageId)) {

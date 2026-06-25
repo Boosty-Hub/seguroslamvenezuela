@@ -344,7 +344,7 @@ export default async function InboxPage({
     // Estado del agente para esta conversación: mismos gates que el backend.
     const { data: pubCfg } = await supabase
       .from("kommo_publish_config")
-      .select("agent_enabled, publishing_enabled, salesbot_id, ignored_stage_ids")
+      .select("agent_enabled, publishing_enabled, salesbot_id, ignored_stage_ids, responding_stage_ids")
       .eq("is_active", true)
       .maybeSingle();
     agentStatus = computeAgentStatus({
@@ -353,6 +353,9 @@ export default async function InboxPage({
       publishingEnabled: pubCfg?.publishing_enabled === true,
       salesbotId: (pubCfg?.salesbot_id as number | null) ?? null,
       ignoredStageIds: (((pubCfg?.ignored_stage_ids ?? []) as unknown[])
+        .map(Number)
+        .filter((n) => Number.isFinite(n))),
+      respondingStageIds: (((pubCfg?.responding_stage_ids ?? []) as unknown[])
         .map(Number)
         .filter((n) => Number.isFinite(n))),
       stageId: currentStageId,
