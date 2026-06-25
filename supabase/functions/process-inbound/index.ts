@@ -440,6 +440,8 @@ type Classification = {
   requires_human_review: boolean;
   confidence: number;
   reasoning: string;
+  gender: "masculino" | "femenino" | "desconocido"; // inferido del NOMBRE del lead
+  age: number; // edad si la persona la declara en el mensaje; 0 = no declarada
 };
 
 async function classify(
@@ -449,7 +451,8 @@ async function classify(
   anthropic: Anthropic,
   operator: string,
   model: string,
-  media?: MediaForClassify | null
+  media?: MediaForClassify | null,
+  leadName?: string | null
 ): Promise<Classification & { media_summary?: string; __usage?: Anthropic.Usage }> {
   const verticalList = verticals
     .map((v) => `  - ${v.slug}: ${v.description ?? "(sin descripción)"}`)
@@ -470,7 +473,9 @@ Reglas:
 - urgency: 1 (casual) a 5 (urgente — cliente molesto, urgencia explícita).
 - toxicity: 0 (neutro/positivo) a 1 (insulto directo).
 - confidence: qué tan seguro estás de la vertical asignada.
-- reasoning: 1-2 frases en español neutro explicando por qué.`;
+- reasoning: 1-2 frases en español neutro explicando por qué.
+- gender: NORMALIZACIÓN GRAMATICAL para concordancia en español (para escribir bienvenido/bienvenida, interesado/interesada según corresponda), inferida del NOMBRE de pila del lead${leadName ? ` (nombre: "${leadName}")` : " (nombre no disponible)"}. Devuelve el género gramatical convencional con que se trata en español a una persona con ese nombre: "masculino" (ej. José, Carlos, Luis), "femenino" (ej. María, Andrea, Ana). NO es una afirmación sobre la identidad de la persona; es solo para concordar adjetivos. Si el nombre es unisex/ambiguo, son iniciales, es un nombre de empresa, o no hay nombre → "desconocido". Infiérelo SOLO del nombre, no del contenido del mensaje.
+- age: edad de la persona SOLO si la declara explícitamente en el mensaje (ej. "tengo 62 años", "soy del 58", "mi edad es 45"). Devuelve el número entero de años. Si no la menciona, devuelve 0. No la infieras ni la inventes.`;
 
   // Contenido del turno: texto, o bloque de media + texto cuando hay adjunto.
   // deno-lint-ignore no-explicit-any
@@ -514,6 +519,8 @@ Reglas:
             confidence: { type: "number" },
             reasoning: { type: "string" },
             media_summary: { type: "string" },
+            gender: { type: "string", enum: ["masculino", "femenino", "desconocido"] },
+            age: { type: "integer" },
           },
           required: [
             "vertical_slug",
@@ -524,6 +531,8 @@ Reglas:
             "confidence",
             "reasoning",
             "media_summary",
+            "gender",
+            "age",
           ],
         },
       },
@@ -537,6 +546,8 @@ Reglas:
   parsed.urgency = Math.max(1, Math.min(5, Math.round(parsed.urgency ?? 1)));
   parsed.toxicity = Math.max(0, Math.min(1, parsed.toxicity ?? 0));
   parsed.confidence = Math.max(0, Math.min(1, parsed.confidence ?? 0));
+  parsed.age = Math.max(0, Math.min(120, Math.round(Number(parsed.age) || 0)));
+  if (parsed.gender !== "masculino" && parsed.gender !== "femenino") parsed.gender = "desconocido";
   parsed.__usage = response.usage;
   return parsed;
 }
@@ -824,8 +835,16 @@ async function processPayload(payload: KommoPayload, anthropic: Anthropic, opera
       }
 
       try {
-        const cls = await classify(text, channel, verticals, anthropic, operator, classifyModel, mediaForClassify);
+        const cls = await classify(text, channel, verticals, anthropic, operator, classifyModel, mediaForClassify, m.author?.name ?? null);
         const v = verticalsBySlug.get(cls.vertical_slug);
+        // Persistir género (estable, del nombre) y edad (si la declaró) en el lead,
+        // para que el agente adapte el trato y se vean en el inbox.
+        const leadPatch: Record<string, unknown> = {};
+        if (cls.gender === "masculino" || cls.gender === "femenino") leadPatch.gender = cls.gender;
+        if (cls.age > 0) leadPatch.age = cls.age;
+        if (Object.keys(leadPatch).length > 0) {
+          await supabase.from("leads").update(leadPatch).eq("id", leadId);
+        }
         // Si clasificamos un adjunto, guardamos su descripción como contenido del
         // mensaje, así el agente (y el inbox) tienen texto con qué trabajar.
         const extra: Record<string, unknown> = {};

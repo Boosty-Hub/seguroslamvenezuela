@@ -811,7 +811,7 @@ async function pickLeadBatch(
 async function getLead(leadId: string) {
   const { data, error } = await supabase
     .from("leads")
-    .select("id, kommo_lead_id, kommo_contact_id, display_name, channel, kommo_stage_id")
+    .select("id, kommo_lead_id, kommo_contact_id, display_name, channel, kommo_stage_id, gender, age")
     .eq("id", leadId)
     .single();
   if (error) throw new Error(`lead ${leadId}: ${error.message}`);
@@ -892,7 +892,7 @@ function buildPromoContext(rows: PromoRow[], timezone: string): {
 
 // ---------------- Construir contexto user.message ----------------
 function buildContext(opts: {
-  lead: { id: string; display_name: string | null; channel: string | null };
+  lead: { id: string; display_name: string | null; channel: string | null; gender?: string | null; age?: number | null };
   messages: Array<{ content: string; created_at: string }>;
   verticalSlug: string;
   channel: string | null;
@@ -927,6 +927,8 @@ en_horario_laboral: ${opts.businessHours.active ? "sí" : "no"} (${opts.business
 ${opts.activePromos ? `promociones_activas (menciónalas solo si vienen al caso de lo que pregunta el lead):\n${opts.activePromos}` : "promociones_activas: ninguna"}${opts.upcomingEvents ? `\neventos_proximos (puedes anticiparlos si aportan a la conversacion):\n${opts.upcomingEvents}` : ""}${opts.commentInstructions != null ? `\norigen_comentario_instagram: sí — ${opts.commentInstructions}` : ""}
 lead_id: ${opts.lead.id}
 lead_name: ${opts.lead.display_name ?? "(desconocido)"}
+lead_genero: ${opts.lead.gender && opts.lead.gender !== "desconocido" ? opts.lead.gender : "desconocido"} (para concordancias de género: bienvenido/a, interesado/a, estimado/a; si es desconocido usa formas neutras)
+lead_edad: ${opts.lead.age && opts.lead.age > 0 ? `${opts.lead.age} años` : "desconocida"} (REGISTRO según el system prompt: 55+ → trátalo de USTED, más formal, pausado y explicativo; menor de 30 → tuteo cercano y casual; 30-54 o desconocida → tuteo profesional estándar)
 vertical: ${opts.verticalSlug}
 channel: ${opts.channel ?? "unknown"}
 intent: ${cls.intent ?? "?"}

@@ -69,7 +69,7 @@ export default async function InboxPage({
   const { data: leads } = await supabase
     .from("leads")
     .select(
-      "id, display_name, channel, kommo_lead_id, kommo_stage_id, last_message_at, messages!inner(id, content, direction, requires_human_review, created_at, classification, verticals(slug))"
+      "id, display_name, channel, kommo_lead_id, kommo_stage_id, gender, age, last_message_at, messages!inner(id, content, direction, requires_human_review, created_at, classification, verticals(slug))"
     )
     .order("last_message_at", { ascending: false, nullsFirst: false })
     .limit(50);
@@ -81,6 +81,8 @@ export default async function InboxPage({
     channel: string | null;
     kommo_lead_id: number | null;
     kommo_stage_id: number | null;
+    gender: string | null;
+    age: number | null;
     last_message_at: string | null;
     lastMsg: { content: string; direction: string; vertical: string | null; requires_review: boolean; created_at: string } | null;
     hasReviewPending: boolean;
@@ -130,6 +132,8 @@ export default async function InboxPage({
       channel: l.channel,
       kommo_lead_id: l.kommo_lead_id,
       kommo_stage_id: (l as unknown as { kommo_stage_id?: number | null }).kommo_stage_id ?? null,
+      gender: (l as unknown as { gender?: string | null }).gender ?? null,
+      age: (l as unknown as { age?: number | null }).age ?? null,
       last_message_at: l.last_message_at,
       lastMsg: last
         ? {
@@ -482,6 +486,19 @@ export default async function InboxPage({
                               {l.lastMsg?.vertical && <Badge color="blue">{l.lastMsg.vertical}</Badge>}
                               {l.hasReviewPending && <Badge color="amber">revisión</Badge>}
                               {!l.hasReviewPending && l.maxToxicity > 0.3 && <Badge color="red">hostil</Badge>}
+                              {l.gender === "femenino" && <span title="femenino" className="text-xs font-semibold text-pink-600">♀</span>}
+                              {l.gender === "masculino" && <span title="masculino" className="text-xs font-semibold text-blue-600">♂</span>}
+                              {l.age ? (
+                                <span
+                                  title={l.age >= 55 ? "Persona mayor — trato de usted" : "Edad declarada"}
+                                  className={
+                                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium " +
+                                    (l.age >= 55 ? "bg-amber-100 text-amber-800" : "bg-neutral-100 text-neutral-600")
+                                  }
+                                >
+                                  {l.age}a{l.age >= 55 ? " · usted" : ""}
+                                </span>
+                              ) : null}
                             </div>
                           </div>
                         </div>
