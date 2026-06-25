@@ -166,29 +166,25 @@ Deno.serve(async (_req) => {
   const force: boolean = body.force === true;
 
   if (force) {
+    // Re-extracción manual: borrar precios del día y resetear la marca de leído.
     await supabase.from("daily_prices").delete().eq("fecha", fechaTarget);
+    await supabase.from("cotizaciones_diarias").update({ prices_extracted_at: null }).eq("fecha", fechaTarget);
   }
 
-  const { data: cotizaciones } = await supabase
+  // Pendientes = PDFs aún NO leídos (prices_extracted_at IS NULL). Cada PDF se
+  // lee EXACTAMENTE una vez: tras procesarlo se marca, aunque dé 0 filas, para
+  // que NUNCA se re-extraiga (antes ese caso se re-leía cada corrida = costo IA).
+  const { data: pendientes } = await supabase
     .from("cotizaciones_diarias")
     .select("categoria, rango_edad, pdf_url")
     .eq("fecha", fechaTarget)
     .eq("status", "success")
-    .not("pdf_url", "is", null);
+    .not("pdf_url", "is", null)
+    .is("prices_extracted_at", null);
 
-  const { data: yaExtraidos } = await supabase
-    .from("daily_prices")
-    .select("subcategoria, rango_edad")
-    .eq("fecha", fechaTarget);
-
-  // deno-lint-ignore no-explicit-any
-  const yaSet = new Set((yaExtraidos ?? []).map((r: any) => `${r.subcategoria}__${r.rango_edad}`));
-  // deno-lint-ignore no-explicit-any
-  const pendientes = (cotizaciones ?? []).filter((c: any) => !yaSet.has(`${c.categoria}__${c.rango_edad}`));
-
-  if (pendientes.length === 0) {
+  if (!pendientes || pendientes.length === 0) {
     return new Response(
-      JSON.stringify({ message: "Precios ya extraídos", fecha: fechaTarget, total: yaSet.size }),
+      JSON.stringify({ message: "Precios ya extraídos hoy — nada que leer", fecha: fechaTarget }),
       { headers: { "Content-Type": "application/json", ...CORS } },
     );
   }
@@ -213,57 +209,74 @@ Deno.serve(async (_req) => {
     .map(([aseg, planes]) => `${aseg}:\n${planes.map((p) => `  - ${p}`).join("\n")}`)
     .join("\n\n");
 
-  const batch = pendientes.slice(0, BATCH_SIZE);
   // deno-lint-ignore no-explicit-any
   const resultados: Record<string, any> = {};
   let extraidos = 0;
+  let leidos = 0;
+  const start = Date.now();
+  const TIME_BUDGET_MS = 110_000; // si no alcanza, lo no-leído se reanuda (la marca evita re-cobro)
 
+  // Marca el PDF como LEÍDO para que no se vuelva a extraer (aunque dé 0 filas).
   // deno-lint-ignore no-explicit-any
-  await Promise.all((batch as any[]).map(async (cot) => {
-    const key = `${cot.categoria}__${cot.rango_edad}`;
-    try {
-      const priceRows = await extractPricesFromPDF(cot.pdf_url, cot.categoria, catalogoTexto, anthropic, model, supabase);
+  const marcarLeido = (cot: any) =>
+    supabase.from("cotizaciones_diarias")
+      .update({ prices_extracted_at: new Date().toISOString() })
+      .eq("fecha", fechaTarget).eq("categoria", cot.categoria).eq("rango_edad", cot.rango_edad);
 
-      if (priceRows.length > 0) {
-        const seen = new Set<string>();
-        const uniqueRows = priceRows.filter((r) => {
-          const k = `${r.nombre_plan}__${r.suma_asegurada}`;
-          if (seen.has(k)) return false;
-          seen.add(k);
-          return true;
-        });
+  // Procesa TODOS los pendientes del día en lotes (concurrencia = BATCH_SIZE).
+  for (let i = 0; i < pendientes.length; i += BATCH_SIZE) {
+    if (Date.now() - start > TIME_BUDGET_MS) break;
+    // deno-lint-ignore no-explicit-any
+    const chunk = (pendientes as any[]).slice(i, i + BATCH_SIZE);
+    await Promise.all(chunk.map(async (cot) => {
+      const key = `${cot.categoria}__${cot.rango_edad}`;
+      try {
+        const priceRows = await extractPricesFromPDF(cot.pdf_url, cot.categoria, catalogoTexto, anthropic, model, supabase);
 
-        const { error: insErr } = await supabase.from("daily_prices").upsert(
-          uniqueRows.map((r) => ({
-            fecha:            fechaTarget,
-            subcategoria:     cot.categoria,
-            rango_edad:       cot.rango_edad,
-            nombre_plan:      r.nombre_plan,
-            aseguradora:      r.aseguradora,
-            suma_asegurada:   r.suma_asegurada,
-            prima_anual:      r.prima_anual,
-            prima_mensual:    r.prima_mensual,
-            prima_semestral:  r.prima_semestral,
-            prima_trimestral: r.prima_trimestral,
-          })),
-          { onConflict: "fecha,subcategoria,rango_edad,nombre_plan,suma_asegurada", ignoreDuplicates: false },
-        );
+        if (priceRows.length > 0) {
+          const seen = new Set<string>();
+          const uniqueRows = priceRows.filter((r) => {
+            const k = `${r.nombre_plan}__${r.suma_asegurada}`;
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
 
-        if (!insErr) extraidos++;
-        else resultados[key + "_err"] = insErr.message;
+          const { error: insErr } = await supabase.from("daily_prices").upsert(
+            uniqueRows.map((r) => ({
+              fecha:            fechaTarget,
+              subcategoria:     cot.categoria,
+              rango_edad:       cot.rango_edad,
+              nombre_plan:      r.nombre_plan,
+              aseguradora:      r.aseguradora,
+              suma_asegurada:   r.suma_asegurada,
+              prima_anual:      r.prima_anual,
+              prima_mensual:    r.prima_mensual,
+              prima_semestral:  r.prima_semestral,
+              prima_trimestral: r.prima_trimestral,
+            })),
+            { onConflict: "fecha,subcategoria,rango_edad,nombre_plan,suma_asegurada", ignoreDuplicates: false },
+          );
+
+          if (!insErr) extraidos++;
+          else resultados[key + "_err"] = insErr.message;
+        }
+
+        // La vision call se completó → marcar leído SIEMPRE (aunque 0 filas), así
+        // este PDF NUNCA se vuelve a leer (era el origen del costo descontrolado).
+        await marcarLeido(cot);
+        leidos++;
+        resultados[key] = { precios: priceRows.length };
+      } catch (err) {
+        // Error transitorio (descarga/API): NO marcar → se reintenta la próxima
+        // corrida diaria (no se pierde, no se re-cobra en bucle).
+        resultados[key] = { error: err instanceof Error ? err.message : String(err) };
       }
-
-      resultados[key] = {
-        precios: priceRows.length,
-        planes: priceRows.map((r) => `${r.aseguradora} | ${r.nombre_plan} | $${r.suma_asegurada}`),
-      };
-    } catch (err) {
-      resultados[key] = { error: err instanceof Error ? err.message : String(err) };
-    }
-  }));
+    }));
+  }
 
   return new Response(
-    JSON.stringify({ success: true, fecha: fechaTarget, extraidos, pendientes: pendientes.length - batch.length, resultados }),
+    JSON.stringify({ success: true, fecha: fechaTarget, leidos, extraidos, restantes: pendientes.length - leidos, resultados }),
     { headers: { "Content-Type": "application/json", ...CORS } },
   );
 });
