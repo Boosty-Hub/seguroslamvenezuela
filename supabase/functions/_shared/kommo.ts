@@ -90,6 +90,114 @@ export async function patchContactField(
 }
 
 /**
+ * Snapshot de los datos de IDENTIDAD de un contacto de Kommo: el nombre estándar
+ * (top-level `name`) y los campos multitext estándar Email/Teléfono (resueltos
+ * por `field_code` EMAIL/PHONE, que existen en toda cuenta de Kommo). Devuelve el
+ * PRIMER valor de cada uno (o null si está vacío). Se usa para "completar solo si
+ * está vacío": NUNCA pisar un dato que el lead ya tiene cargado. Throws si !OK.
+ */
+export type KommoContactSnapshot = {
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+};
+
+export async function fetchContactSnapshot(
+  kommoContactId: number,
+  kommoDomain: string,
+  kommoToken: string
+): Promise<KommoContactSnapshot> {
+  const url = `https://${kommoDomain}/api/v4/contacts/${kommoContactId}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${kommoToken}` },
+  });
+  if (!res.ok) {
+    throw new Error(`fetch contact: ${res.status} ${await res.text()}`);
+  }
+  const json = (await res.json()) as {
+    name?: string | null;
+    custom_fields_values?: Array<{
+      field_code?: string | null;
+      values?: Array<{ value?: unknown }>;
+    }> | null;
+  };
+  let email: string | null = null;
+  let phone: string | null = null;
+  for (const f of json.custom_fields_values ?? []) {
+    const code = (f.field_code ?? "").toUpperCase();
+    const v = f.values?.[0]?.value;
+    const val = v == null || v === "" ? null : String(v);
+    if (code === "EMAIL" && val) email = val;
+    if (code === "PHONE" && val) phone = val;
+  }
+  const name = json.name == null || json.name === "" ? null : String(json.name);
+  return { name, email, phone };
+}
+
+/**
+ * Resuelve el `enum_code` a usar al ESCRIBIR un valor nuevo en los campos
+ * multitext estándar Email/Teléfono del contacto (Kommo exige un enum: WORK,
+ * MOBILE, etc.). Lee las definiciones de custom fields y toma el primer enum de
+ * cada campo (por `field_code` EMAIL/PHONE). Fallback "WORK" (presente por
+ * defecto en ambos campos en toda cuenta de Kommo). 204 = sin campos.
+ */
+export async function fetchContactEnumCodes(
+  kommoDomain: string,
+  kommoToken: string
+): Promise<{ email: string; phone: string }> {
+  const url = `https://${kommoDomain}/api/v4/contacts/custom_fields?limit=250`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${kommoToken}` },
+  });
+  if (res.status === 204) return { email: "WORK", phone: "WORK" };
+  if (!res.ok) {
+    throw new Error(`fetch contact fields: ${res.status} ${await res.text()}`);
+  }
+  const json = (await res.json()) as {
+    _embedded?: {
+      custom_fields?: Array<{
+        code?: string | null;
+        enums?: Array<{ enum?: string | null }> | null;
+      }>;
+    };
+  };
+  let email = "WORK";
+  let phone = "WORK";
+  for (const f of json._embedded?.custom_fields ?? []) {
+    const code = (f.code ?? "").toUpperCase();
+    const firstEnum = f.enums?.[0]?.enum ?? null;
+    if (code === "EMAIL" && firstEnum) email = firstEnum;
+    if (code === "PHONE" && firstEnum) phone = firstEnum;
+  }
+  return { email, phone };
+}
+
+/**
+ * PATCH genérico a un contacto de Kommo con un body arbitrario (nombre top-level
+ * y/o custom_fields_values). Sanea cualquier `value` de string (utf8mb3). Se usa
+ * para completar nombre/email/teléfono en una sola llamada. Throws si !OK.
+ */
+export async function patchContactRaw(
+  kommoContactId: number,
+  body: Record<string, unknown>,
+  kommoDomain: string,
+  kommoToken: string
+): Promise<void> {
+  const url = `https://${kommoDomain}/api/v4/contacts/${kommoContactId}`;
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${kommoToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    throw new Error(`patch contact: ${res.status} ${await res.text()}`);
+  }
+}
+
+/**
  * Actualiza el CONTENIDO de una plantilla de chat de Kommo
  * (PATCH /api/v4/chats/templates con [{id, content}]). El flujo legacy de n8n
  * escribe la respuesta del agente en una plantilla y luego corre un salesbot

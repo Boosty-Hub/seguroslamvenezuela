@@ -18,6 +18,10 @@ import {
   fetchLeadStage,
   fetchPipelineStages,
   fetchEntityFields,
+  fetchContactSnapshot,
+  fetchContactEnumCodes,
+  patchContactRaw,
+  sanitizeForKommoField,
   type KommoStageLite,
   type KommoFieldLite,
 } from "../_shared/kommo.ts";
@@ -266,7 +270,12 @@ type CrmContext = {
   draftId?: string;
 };
 
-const CRM_TOOL_NAMES = new Set(["mover_etapa", "actualizar_lead", "actualizar_contacto"]);
+const CRM_TOOL_NAMES = new Set([
+  "mover_etapa",
+  "actualizar_lead",
+  "actualizar_contacto",
+  "guardar_datos_contacto",
+]);
 const CRM_TTL_MS = 60_000;
 let stagesCache: { items: KommoStageLite[]; loadedAt: number } | null = null;
 let leadFieldsCache: { items: KommoFieldLite[]; loadedAt: number } | null = null;
@@ -401,6 +410,60 @@ async function runCrmTool(
     }
     await patchContactField(ctx.kommoContactId, f.id, value, ctx.domain, ctx.token);
     return `Listo: actualicé el campo "${f.name}" del contacto a "${value}".`;
+  }
+
+  if (name === "guardar_datos_contacto") {
+    // Completa nombre / email / teléfono del contacto en Kommo a partir de los
+    // datos que el lead comparte en la conversación. Regla CLAVE: SOLO escribe
+    // un campo si actualmente está VACÍO en Kommo — nunca pisa un dato existente
+    // (lee el contacto antes de escribir). Reusa el gate de "actualizar contacto".
+    if (!ctx.gate.updateContact) return "La acción 'actualizar datos del contacto' está desactivada por el operador. No la realices.";
+    if (ctx.kommoContactId == null) return "Este lead no tiene un contacto asociado en Kommo; no puedo guardar sus datos.";
+    const nombre = String(input.nombre_completo ?? "").trim();
+    const email = String(input.email ?? "").trim();
+    const telefono = String(input.telefono ?? "").trim();
+    if (!nombre && !email && !telefono) {
+      return "ERROR_VALIDACION: no enviaste ningún dato. Pasá al menos uno de: nombre_completo, email, telefono.";
+    }
+
+    const snap = await fetchContactSnapshot(ctx.kommoContactId, ctx.domain, ctx.token);
+    const body: Record<string, unknown> = {};
+    const cfv: Array<Record<string, unknown>> = [];
+    const filled: string[] = [];
+    const skipped: string[] = [];
+
+    if (nombre) {
+      if (snap.name) skipped.push(`nombre (ya: "${snap.name}")`);
+      else { body.name = sanitizeForKommoField(nombre); filled.push("nombre"); }
+    }
+
+    // Email/Teléfono son multitext estándar (field_code EMAIL/PHONE) → exigen un
+    // enum_code al escribir. Solo resolvemos los enums si hay algo nuevo que poner.
+    const wantEmail = email && !snap.email;
+    const wantPhone = telefono && !snap.phone;
+    if (email && snap.email) skipped.push(`email (ya: "${snap.email}")`);
+    if (telefono && snap.phone) skipped.push(`teléfono (ya: "${snap.phone}")`);
+
+    if (wantEmail || wantPhone) {
+      const enums = await fetchContactEnumCodes(ctx.domain, ctx.token);
+      if (wantEmail) {
+        cfv.push({ field_code: "EMAIL", values: [{ value: sanitizeForKommoField(email), enum_code: enums.email }] });
+        filled.push("email");
+      }
+      if (wantPhone) {
+        cfv.push({ field_code: "PHONE", values: [{ value: sanitizeForKommoField(telefono), enum_code: enums.phone }] });
+        filled.push("teléfono");
+      }
+    }
+
+    if (filled.length === 0) {
+      return `No actualicé nada: ${skipped.join("; ")} — ya estaban cargados en Kommo (no se pisan datos existentes).`;
+    }
+    if (cfv.length > 0) body.custom_fields_values = cfv;
+    await patchContactRaw(ctx.kommoContactId, body, ctx.domain, ctx.token);
+    let msg = `Listo: completé en el contacto de Kommo: ${filled.join(", ")}.`;
+    if (skipped.length > 0) msg += ` No toqué: ${skipped.join("; ")} (ya tenían valor).`;
+    return msg;
   }
 
   return `Tool CRM desconocida: "${name}".`;

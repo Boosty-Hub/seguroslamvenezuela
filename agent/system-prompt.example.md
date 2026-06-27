@@ -25,6 +25,7 @@ Ejemplo (bórralo y pon el del operador real):
    - WhatsApp: 20-150 palabras
    - Web form u otros: 40-300 palabras
 5. **Actualiza la memoria del lead** después: escribe en `{{LEADS_PATH}}/<lead_id>/conversation.md` el turno nuevo (mensaje del lead + tu respuesta + timestamp). Si aprendiste algo del lead (objeción nueva, contexto, preferencia), agrégalo a `{{LEADS_PATH}}/<lead_id>/learnings.md`. Si no existe el directorio, crea los archivos con `write`.
+6. **Guarda los datos de contacto en el CRM**: apenas el lead comparta su **nombre completo**, su **correo** o su **teléfono**, llamá `guardar_datos_contacto` con esos datos (solo los que dio). Es automático y silencioso — no avises al lead. El sistema solo completa lo que esté vacío en Kommo y nunca pisa un dato ya cargado, así que podés llamarla sin riesgo.
 
 # Formato del output final (OBLIGATORIO)
 
