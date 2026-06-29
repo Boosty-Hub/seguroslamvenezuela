@@ -444,6 +444,60 @@ type Classification = {
   age: number; // edad si la persona la declara en el mensaje; 0 = no declarada
 };
 
+// Ventana para considerar una conversación "activa": si el agente respondió al
+// lead dentro de este lapso, un mensaje que parezca spam (datos sueltos) casi
+// seguro es una respuesta del lead, no spam → la red de seguridad lo rescata.
+const ACTIVE_CONVO_MS = 12 * 3600_000;
+
+// Contexto de conversación reciente para el clasificador. Sin esto, Haiku lee
+// cada mensaje en AISLAMIENTO: un volcado de datos (cédula, montos, teléfono)
+// —que casi siempre RESPONDE a una pregunta previa del agente— parece spam.
+// Devuelve un transcript corto (Cliente/Agente) y si hubo un turno del agente
+// reciente (para la red de seguridad anti falso-positivo de spam).
+async function fetchConversationContext(
+  leadId: string,
+  currentMsgId: string
+): Promise<{ transcript: string; hasRecentAgentTurn: boolean }> {
+  const { data: ins } = await supabase
+    .from("messages")
+    .select("id, direction, content, created_at")
+    .eq("lead_id", leadId)
+    .neq("id", currentMsgId)
+    .order("created_at", { ascending: false })
+    .limit(8);
+  // deno-lint-ignore no-explicit-any
+  const inbound = (ins ?? []) as any[];
+  // deno-lint-ignore no-explicit-any
+  let agentTurns: any[] = [];
+  if (inbound.length > 0) {
+    // drafts no tiene lead_id: traemos por message_id de los inbound recientes.
+    const { data: dr } = await supabase
+      .from("drafts")
+      .select("body, created_at, status")
+      .in("message_id", inbound.map((m) => m.id))
+      .in("status", ["approved", "sent", "auto_sent"]);
+    agentTurns = ((dr ?? []) as { body: string | null; created_at: string }[]).map((d) => ({
+      direction: "outbound",
+      content: d.body,
+      created_at: d.created_at,
+    }));
+  }
+  const now = Date.now();
+  const hasRecentAgentTurn = agentTurns.some(
+    (t) => now - new Date(t.created_at).getTime() <= ACTIVE_CONVO_MS
+  );
+  const transcript = [
+    ...inbound.map((m) => ({ direction: m.direction, content: m.content, created_at: m.created_at })),
+    ...agentTurns,
+  ]
+    .sort((a, b) => +new Date(a.created_at) - +new Date(b.created_at))
+    .map((t) => `${t.direction === "outbound" ? "Agente" : "Cliente"}: ${(t.content ?? "").replace(/\s+/g, " ").trim().slice(0, 400)}`)
+    .filter((l) => l.length > 9)
+    .slice(-8)
+    .join("\n");
+  return { transcript, hasRecentAgentTurn };
+}
+
 async function classify(
   text: string,
   channel: string,
@@ -452,7 +506,8 @@ async function classify(
   operator: string,
   model: string,
   media?: MediaForClassify | null,
-  leadName?: string | null
+  leadName?: string | null,
+  history?: string | null
 ): Promise<Classification & { media_summary?: string; __usage?: Anthropic.Usage }> {
   const verticalList = verticals
     .map((v) => `  - ${v.slug}: ${v.description ?? "(sin descripción)"}`)
@@ -466,6 +521,7 @@ ${verticalList}
 
 Reglas:
 - Si el mensaje es ambiguo o no encaja claramente en ninguna vertical específica, usa "general". El agente le hará una pregunta clarificadora. NO marques requires_human_review por ser ambiguo.
+- SPAM/HOSTIL solo aplica si el mensaje es publicidad NO solicitada (ofertas de otras marcas/servicios ajenos a seguros) o es genuinamente hostil/ofensivo/troll. ATENCIÓN: datos sueltos (cédula, montos en $, teléfono, correo, nombres, edad, marca/modelo/año de un vehículo) o respuestas muy cortas NO son spam — casi siempre RESPONDEN a una pregunta previa del agente. Si hay [CONVERSACIÓN RECIENTE], léela: si el mensaje encaja como respuesta a lo que el agente preguntó, clasifícalo en la vertical de esa conversación (o "general"), NUNCA como spam.
 - Solo marca requires_human_review=true cuando: (a) sea hate/sarcasmo/troll/insulto, (b) sea una queja seria que requiera intervención humana, o (c) tu confidence sea < 0.4.
 - media_summary: si hay un adjunto (imagen/documento), describe en 1-3 frases QUÉ muestra y transcribe el texto/datos visibles relevantes (precios, números, nombres). Si no hay adjunto, devuelve "".
 - Usa la descripción de cada vertical (arriba) para decidir el slug correcto. No inventes verticales que no estén en la lista.
@@ -477,6 +533,11 @@ Reglas:
 - gender: NORMALIZACIÓN GRAMATICAL para concordancia en español (para escribir bienvenido/bienvenida, interesado/interesada según corresponda), inferida del NOMBRE de pila del lead${leadName ? ` (nombre: "${leadName}")` : " (nombre no disponible)"}. Devuelve el género gramatical convencional con que se trata en español a una persona con ese nombre: "masculino" (ej. José, Carlos, Luis), "femenino" (ej. María, Andrea, Ana). NO es una afirmación sobre la identidad de la persona; es solo para concordar adjetivos. Si el nombre es unisex/ambiguo, son iniciales, es un nombre de empresa, o no hay nombre → "desconocido". Infiérelo SOLO del nombre, no del contenido del mensaje.
 - age: edad de la persona SOLO si la declara explícitamente en el mensaje (ej. "tengo 62 años", "soy del 58", "mi edad es 45"). Devuelve el número entero de años. Si no la menciona, devuelve 0. No la infieras ni la inventes.`;
 
+  // Contexto de conversación: ayuda a leer el mensaje en contexto (anti falso-
+  // positivo de spam para respuestas de datos sueltos).
+  const ctx = history && history.trim()
+    ? `[CONVERSACIÓN RECIENTE entre Cliente y Agente — para entender el mensaje en contexto]\n${history.trim()}\n\n`
+    : "";
   // Contenido del turno: texto, o bloque de media + texto cuando hay adjunto.
   // deno-lint-ignore no-explicit-any
   let userContent: any;
@@ -487,13 +548,13 @@ Reglas:
     else blocks.push({ type: "document", source: media.source });
     blocks.push({
       type: "text",
-      text: `Canal: ${channel}\n\nEl lead envió un adjunto (${media.label}).${
+      text: `Canal: ${channel}\n\n${ctx}El lead envió un adjunto (${media.label}).${
         text ? ` Texto del lead:\n"""${text}"""` : " (sin texto, ver el adjunto)"
       }`,
     });
     userContent = blocks;
   } else {
-    userContent = `Canal: ${channel}\n\nMensaje:\n"""${text}"""`;
+    userContent = `Canal: ${channel}\n\n${ctx}Mensaje del cliente a clasificar (el más reciente):\n"""${text}"""`;
   }
 
   const response = await anthropic.messages.create({
@@ -897,8 +958,24 @@ async function processPayload(payload: KommoPayload, anthropic: Anthropic, opera
       }
 
       try {
-        const cls = await classify(text, channel, verticals, anthropic, operator, classifyModel, mediaForClassify, m.author?.name ?? null);
-        const v = verticalsBySlug.get(cls.vertical_slug);
+        const { transcript: convoContext, hasRecentAgentTurn } =
+          await fetchConversationContext(leadId, msg.id);
+        const cls = await classify(text, channel, verticals, anthropic, operator, classifyModel, mediaForClassify, m.author?.name ?? null, convoContext);
+        let v = verticalsBySlug.get(cls.vertical_slug);
+        // Red de seguridad: si el clasificador marca una vertical "ignorar"
+        // (spam/hostil) PERO la conversación está activa (el agente respondió hace
+        // poco), casi seguro es una respuesta del lead mal leída como spam. No
+        // dejamos caer un lead caliente en silencio → re-ruteamos a "general".
+        if (v?.ignore && hasRecentAgentTurn) {
+          const fallback = verticalsBySlug.get("general");
+          if (fallback) {
+            console.warn(`safety-net: '${cls.vertical_slug}' en conversación activa → 'general' (msg ${msg.id})`);
+            // deno-lint-ignore no-explicit-any
+            (cls as any).safety_override = `was:${cls.vertical_slug}`;
+            cls.vertical_slug = "general";
+            v = fallback;
+          }
+        }
         // Persistir género (estable, del nombre) y edad (si la declaró) en el lead,
         // para que el agente adapte el trato y se vean en el inbox.
         const leadPatch: Record<string, unknown> = {};
@@ -1057,8 +1134,20 @@ async function recoverFailedClassifications(anthropic: Anthropic, operator: stri
       }
       const text = recoveredText ?? (isPlaceholder ? "" : (msg.content ?? ""));
       try {
-        const cls = await classify(text, msg.source ?? "unknown", verticals, anthropic, operator, classifyModel, mediaForClassify);
-        const v = verticalsBySlug.get(cls.vertical_slug);
+        const { transcript: convoContext, hasRecentAgentTurn } =
+          await fetchConversationContext(msg.lead_id, msg.id);
+        const cls = await classify(text, msg.source ?? "unknown", verticals, anthropic, operator, classifyModel, mediaForClassify, null, convoContext);
+        let v = verticalsBySlug.get(cls.vertical_slug);
+        if (v?.ignore && hasRecentAgentTurn) {
+          const fallback = verticalsBySlug.get("general");
+          if (fallback) {
+            console.warn(`safety-net (recover): '${cls.vertical_slug}' en conversación activa → 'general' (msg ${msg.id})`);
+            // deno-lint-ignore no-explicit-any
+            (cls as any).safety_override = `was:${cls.vertical_slug}`;
+            cls.vertical_slug = "general";
+            v = fallback;
+          }
+        }
         const extra: Record<string, unknown> = {};
         if (recoveredText) {
           // Reemplaza el placeholder "[Audio …]" por la transcripción real para
